@@ -1,0 +1,54 @@
+{% extends 'accounts/base.html' %}{% block content_guest %}<form method="post" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-4 my-10">{% csrf_token %}<h1 class="text-2xl font-bold text-blue-600">Ro'yxatdan o'tish</h1>
+{% if messages %}{% for m in messages %}<div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold">{{ m }}</div>{% endfor %}{% endif %}
+
+<div>
+    <label class="text-xs font-bold text-slate-600">Rolingizni tanlang:</label>
+    <select id="role_select" name="role" class="w-full border p-3 rounded-xl mt-1 font-bold" onchange="toggleRoleFields()">
+        <option value="student">🎓 O'quvchi</option>
+        <option value="teacher">👨‍🏫 Ustoz (Faqat Google Akkaunt va Shaxsiy Google Cloud)</option>
+    </select>
+</div>
+
+<input name="full_name" required placeholder="Ism va Familiya (masalan: Alisher Navoiy)" class="w-full border p-3 rounded-xl">
+
+<!-- O'quvchi uchun login/parol va sinf maydonlari -->
+<div id="student_fields" class="space-y-4">
+    <input id="st_user" name="username" placeholder="Login (username)" class="w-full border p-3 rounded-xl">
+    <input id="st_pass" name="password" type="password" placeholder="Parol" class="w-full border p-3 rounded-xl">
+    <div class="grid grid-cols-2 gap-2">
+        <select name="grade" class="border p-3 rounded-xl w-full"><option value="barcha">Sinf (Barcha)</option><option value="7">7-sinf</option><option value="8">8-sinf</option><option value="9">9-sinf</option><option value="10">10-sinf</option><option value="11">11-sinf</option></select>
+        <select name="letter" class="border p-3 rounded-xl w-full"><option value="barchasi">Harf (Barchasi)</option><option value="A">A</option><option value="B">B</option><option value="D">D</option></select>
+    </div>
+</div>
+
+<!-- Ustoz uchun fan va shaxsiy Google Cloud maydonlari -->
+<div id="teacher_fields" class="space-y-4 hidden">
+    <input name="subject" placeholder="Fan nomi (masalan: Matematika)" class="w-full border p-3 rounded-xl">
+    <input name="google_cloud_bucket" placeholder="Shaxsiy Google Cloud Bucket nomi (ixtiyoriy, bo'sh qolsa Google Drive ishlatiladi)" class="w-full border p-3 rounded-xl text-sm">
+    <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
+        <b>Eslatma:</b> Ustozlar parol ishlatmaydi. Ma'lumotlarni to'ldirib tugmani bosganingizdan so'ng, <b>Google akkauntingiz</b> orqali tasdiqlaysiz va testlaringiz to'g'ridan-to'g'ri o'zingizning Google Cloud xotirangizga bog'lanadi.
+    </div>
+</div>
+
+<button id="submit_btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm">Ro'yxatdan o'tish</button>
+<a href="{% url 'login' %}" class="block text-center text-sm text-slate-500 hover:underline">Akkauntingiz bormi? Kirish</a>
+</form>
+<script>
+function toggleRoleFields() {
+    const role = document.getElementById('role_select').value;
+    const stFields = document.getElementById('student_fields');
+    const thFields = document.getElementById('teacher_fields');
+    const btn = document.getElementById('submit_btn');
+    if (role === 'teacher') {
+        stFields.classList.add('hidden');
+        thFields.classList.remove('hidden');
+        btn.innerText = "Ma'lumotlarni saqlash va Google orqali kirish";
+        btn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition shadow-sm";
+    } else {
+        stFields.classList.remove('hidden');
+        thFields.classList.add('hidden');
+        btn.innerText = "Ro'yxatdan o'tish";
+        btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm";
+    }
+}
+</script>{% endblock %}

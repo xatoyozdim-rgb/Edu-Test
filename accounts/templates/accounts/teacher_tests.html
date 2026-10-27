@@ -1,0 +1,24 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Mening Testlarim (Shaxsiy Google Cloud)</h1><a href="{% url 'test_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm">+ Yangi Test</a></div>
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+{% for t in my_tests %}<div class="border border-slate-200 p-4 rounded-xl mb-4"><div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-2 gap-2">
+<div>
+    <b>{{ t.title }} (Fan: {{ t.subject }}, Turi: {{ t.get_test_type_display }}, Status: <span class="text-blue-600 font-bold">{{ t.get_status_display }}</span>)</b>
+    <div class="text-xs text-emerald-700 font-semibold mt-1">
+        ☁️ Joylashuv: <b>{{ t.teacher_cloud_provider }}</b>
+        {% if t.teacher_cloud_url %}<a href="{{ t.teacher_cloud_url }}" target="_blank" class="underline ml-2 text-blue-600">Google Cloud'da ochish</a>{% endif %}
+        <a href="{% url 'test_cloud_json' t.id %}" target="_blank" class="underline ml-2 text-indigo-600">Cloud JSON fayl</a>
+    </div>
+</div>
+<div class="flex flex-wrap gap-2">
+{% if t.status == 'published' %}
+<a href="{% url 'test_close' t.id %}" onclick="return confirm('Haqiqatan ham bu testni muddatidan oldin yakunlamoqchimisiz?');" class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 px-3 py-1.5 rounded-lg font-bold text-xs transition">🛑 Testni yakunlash</a>
+{% endif %}
+<a href="{% url 'test_edit' t.id %}" class="text-blue-600 font-bold text-sm hover:underline self-center">Tahrirlash</a>
+<a href="{% url 'test_view' t.id %}" class="text-green-600 font-bold text-sm hover:underline self-center">Javoblar va Diagramma</a>
+<a href="{% url 'monitor_students' t.id %}" class="text-indigo-600 font-bold text-sm hover:underline self-center">Kuzatish</a>
+</div></div>
+<table class="w-full text-sm text-left border-t border-slate-100 mt-2 pt-2"><tr class="bg-slate-50"><th class="p-2.5">Foydalanuvchi</th><th class="p-2.5">Sinf</th><th class="p-2.5">Urinish</th><th class="p-2.5">Holat</th><th class="p-2.5">Ball</th></tr>
+{% for a in t.attempts.all %}<tr class="border-b border-slate-100"><td class="p-2.5 font-bold">{{ a.student.get_display_name|default:"Anonim ishtirokchi" }}</td><td class="p-2.5">{% if a.student %}{{ a.student.grade }}-{{ a.student.letter }}{% else %}-{% endif %}</td><td class="p-2.5">{{ a.attempt_number }}</td><td class="p-2.5">{{ a.get_status_display }}</td><td class="p-2.5 font-bold text-blue-600">{{ a.score }}</td></tr>{% empty %}<tr><td colspan="5" class="p-2.5 text-slate-400 text-center">Hali hech kim yechmadi</td></tr>{% endfor %}</table></div>{% empty %}<p class="text-slate-400 text-sm">Hozircha testlar yaratmagansiz.</p>{% endfor %}
+</div>
+{% endblock %}

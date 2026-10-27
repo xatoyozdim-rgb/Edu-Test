@@ -1,0 +1,27 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+<div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
+<h2 class="text-xl font-bold">🏆 O'quvchilar Reytingi</h2>
+<form method="get" class="flex gap-2 flex-wrap items-center">
+<select name="period" onchange="this.form.submit()" class="border p-2.5 rounded-xl text-sm bg-slate-50 font-bold"><option value="week" {% if rating_period == 'week' %}selected{% endif %}>Haftalik reyting</option><option value="month" {% if rating_period == 'month' %}selected{% endif %}>Oylik reyting</option></select>
+<select name="r_grade" onchange="this.form.submit()" class="border p-2.5 rounded-xl text-sm"><option value="barcha">Sinf (Barchasi)</option><option value="7" {% if r_grade == '7' %}selected{% endif %}>7-sinf</option><option value="8" {% if r_grade == '8' %}selected{% endif %}>8-sinf</option><option value="9" {% if r_grade == '9' %}selected{% endif %}>9-sinf</option><option value="10" {% if r_grade == '10' %}selected{% endif %}>10-sinf</option><option value="11" {% if r_grade == '11' %}selected{% endif %}>11-sinf</option></select>
+<select name="r_letter" onchange="this.form.submit()" class="border p-2.5 rounded-xl text-sm"><option value="barchasi">Harf (Barchasi)</option><option value="A" {% if r_letter == 'A' %}selected{% endif %}>A</option><option value="B" {% if r_letter == 'B' %}selected{% endif %}>B</option><option value="D" {% if r_letter == 'D' %}selected{% endif %}>D</option></select>
+</form>
+</div>
+<div class="overflow-x-auto"><table class="w-full text-sm text-left">
+<tr class="bg-slate-50"><th class="p-3">O'rin</th><th class="p-3">O'quvchi (Ism Familiya)</th><th class="p-3">Sinf</th><th class="p-3">O'rtacha Foiz</th><th class="p-3">Ishlangan Testlar</th><th class="p-3">Status / Daraja</th></tr>
+{% for r in ranked_list %}
+<tr class="border-b border-slate-100 transition hover:bg-slate-50 {{ r.tier_class }}">
+<td class="p-3 font-bold">#{{ r.rank }}</td>
+<td class="p-3 font-extrabold text-base">{{ r.user.get_display_name }}</td>
+<td class="p-3">{{ r.user.grade }}-{{ r.user.letter }}</td>
+<td class="p-3 font-black text-lg">{{ r.avg_pct|floatformat:1 }}%</td>
+<td class="p-3 font-bold">{{ r.total_tests }} ta</td>
+<td class="p-3 font-bold">{{ r.badge }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="p-4 text-center text-slate-400">Reyting uchun ma'lumotlar yetarli emas</td></tr>
+{% endfor %}
+</table></div>
+</div>
+{% endblock %}

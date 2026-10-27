@@ -1,0 +1,30 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+<h1 class="text-2xl font-bold mb-2">👥 O'quvchilar Monitori (Sinflar ketma-ketligida)</h1>
+<p class="text-sm text-slate-500 mb-6">Barcha o'quvchilarning sinflari (7A dan 11D gacha) bo'yicha joriy holati va oxirgi urinishlari.</p>
+<div class="overflow-x-auto"><table class="w-full text-sm text-left border-collapse">
+<thead><tr class="bg-slate-50 border-b border-slate-200"><th class="p-3">O'quvchi (Ism va Familiya)</th><th class="p-3">Sinf</th><th class="p-3">Oxirgi Test</th><th class="p-3">Holat</th><th class="p-3">Oxirgi Ball</th><th class="p-3">Vaqti</th></tr></thead>
+<tbody>
+{% for item in student_data %}
+<tr class="border-b border-slate-100 hover:bg-slate-50">
+<td class="p-3 font-bold text-blue-700">{{ item.student.get_display_name }}</td>
+<td class="p-3 font-semibold">{{ item.student.grade }}-{{ item.student.letter }}</td>
+<td class="p-3">{{ item.last_attempt.test.title|default:"Test ishlamagan" }}</td>
+<td class="p-3">
+    {% if item.last_attempt %}
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if item.last_attempt.status == 'completed' %}bg-green-100 text-green-700{% elif item.last_attempt.status == 'in_progress' %}bg-blue-100 text-blue-700{% elif item.last_attempt.status == 'blocked' %}bg-red-100 text-red-700{% else %}bg-slate-100 text-slate-700{% endif %}">
+            {{ item.last_attempt.get_status_display }}
+        </span>
+    {% else %}
+        <span class="text-slate-400">-</span>
+    {% endif %}
+</td>
+<td class="p-3 font-bold text-blue-600">{% if item.last_attempt %}{{ item.last_attempt.score }}{% else %}-{% endif %}</td>
+<td class="p-3 text-xs text-slate-500">{% if item.last_attempt %}{{ item.last_attempt.started_at|date:"d.m.Y H:i" }}{% else %}-{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="p-4 text-center text-slate-400">Hozircha o'quvchilar ro'yxati bo'sh</td></tr>
+{% endfor %}
+</tbody></table></div>
+</div>
+{% endblock %}

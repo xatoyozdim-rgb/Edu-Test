@@ -1,0 +1,45 @@
+{% extends 'accounts/base.html' %}{% block content_guest %}
+<form method="post" action="{% url 'google_callback' %}" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg border border-slate-200 space-y-4 my-10">{% csrf_token %}
+    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+        <svg class="w-8 h-8" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/></svg>
+        <div>
+            <h1 class="text-lg font-bold text-slate-800">Google Akkaunt va Shaxsiy Cloud</h1>
+            <p class="text-xs text-slate-500">Ustoz sifatida tizimga kirish va Google Cloud'ni ulash</p>
+        </div>
+    </div>
+
+    {% if pending.full_name %}
+    <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+        <b>Ro'yxatdan o'tuvchi ustoz:</b> {{ pending.full_name }} ({{ pending.subject|default:"Fan" }})
+    </div>
+    {% endif %}
+
+    <div>
+        <label class="text-xs font-bold text-slate-600">Google (Gmail) manzilingiz:</label>
+        <input type="email" name="google_email" required placeholder="ustoz@gmail.com" class="w-full border p-3 rounded-xl mt-1">
+    </div>
+
+    {% if not pending.full_name %}
+    <div>
+        <label class="text-xs font-bold text-slate-600">Ism va Familiya (yangi ustoz bo'lsangiz):</label>
+        <input name="google_name" placeholder="Ism va Familiya" class="w-full border p-3 rounded-xl mt-1">
+    </div>
+    <div>
+        <label class="text-xs font-bold text-slate-600">Fan:</label>
+        <input name="subject" placeholder="Masalan: Ona tili va adabiyot" class="w-full border p-3 rounded-xl mt-1">
+    </div>
+    {% endif %}
+
+    <div>
+        <label class="text-xs font-bold text-slate-600">Shaxsiy Google Cloud Bucket (ixtiyoriy):</label>
+        <input name="google_cloud_bucket" value="{{ pending.google_cloud_bucket|default:'' }}" placeholder="Bo'sh qoldirilsa shaxsiy Google Drive ishlatiladi" class="w-full border p-3 rounded-xl mt-1 text-sm">
+    </div>
+
+    <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900">
+        ☁️ Tasdiqlash orqali yaratgan barcha testlaringiz markaziy serverda emas, to'g'ridan-to'g'ri <b>o'zingizning Google Cloud</b> xotirangizda saqlanishiga ruxsat berasiz.
+    </div>
+
+    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-md">Google Akkaunt orqali Tasdiqlash va Kirish</button>
+    <a href="{% url 'login' %}" class="block text-center text-xs text-slate-400 hover:underline">Ortga qaytish</a>
+</form>
+{% endblock %}

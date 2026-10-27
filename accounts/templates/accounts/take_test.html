@@ -1,0 +1,123 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-4 flex justify-between items-center font-bold"><span>{{ test.title }}</span>{% if is_owner_preview %}<span class="text-green-600">Ustoz Tahlil Rejimi</span>{% else %}<span id="timer" class="text-red-600 text-xl">--:--</span>{% endif %}</div>
+
+{% if is_owner_preview %}
+<div class="space-y-6">
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-lg font-bold mb-4">Savollar bo'yicha ishtirokchilar javoblari (Diagramma)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for stat in question_stats %}
+            <div class="border border-slate-200 p-4 rounded-xl bg-slate-50">
+                <h3 class="font-bold text-sm mb-2">{{ stat.question.order }}. {{ stat.question.text }}</h3>
+                <div class="w-full max-w-xs mx-auto"><canvas id="chart_{{ stat.question.id }}"></canvas></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h2 class="text-lg font-bold mb-4">Ishtirokchilarning to'liq bergan javoblari</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="p-3">Foydalanuvchi</th>
+                        <th class="p-3">Urinish</th>
+                        <th class="p-3">Jami Ball</th>
+                        <th class="p-3">Savollar va Tanlagan javoblari</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for att in attempts %}
+                    <tr class="border-b border-slate-100 align-top">
+                        <td class="p-3 font-bold">{{ att.student.get_display_name|default:"Anonim" }}</td>
+                        <td class="p-3">{{ att.attempt_number }}</td>
+                        <td class="p-3 font-bold text-blue-600">{{ att.score }}</td>
+                        <td class="p-3 space-y-1">
+                            {% for ans in att.answers.all %}
+                            <div class="text-xs border-b border-slate-100 pb-1">
+                                <b>{{ ans.question.order }}-savol:</b> 
+                                {% if ans.selected_option %}
+                                    <span class="{% if ans.selected_option.is_correct %}text-green-600 font-bold{% else %}text-red-600{% endif %}">{{ ans.selected_option.text }}</span>
+                                {% elif ans.selected_options.all %}
+                                    {% for o in ans.selected_options.all %}
+                                        <span class="{% if o.is_correct %}text-green-600 font-bold{% else %}text-red-600{% endif %}">[{{ o.text }}]</span>
+                                    {% endfor %}
+                                {% elif ans.text_answer %}
+                                    <span class="text-blue-600 font-bold">{{ ans.text_answer }}</span>
+                                {% else %}
+                                    <span class="text-slate-400">Javob berilmagan</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="p-4 text-center text-slate-400">Hali hech kim ishlagani yo'q</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    {% for stat in question_stats %}
+    new Chart(document.getElementById('chart_{{ stat.question.id }}'), {
+        type: 'pie',
+        data: {
+            labels: {{ stat.labels|safe }},
+            datasets: [{
+                data: {{ stat.counts|safe }},
+                backgroundColor: ['#2563eb', '#16a34a', '#dc2626', '#9333ea', '#ca8a04']
+            }]
+        }
+    });
+    {% endfor %}
+</script>
+{% else %}
+<div id="fs_gate" class="fixed inset-0 bg-slate-950/90 text-white flex flex-col items-center justify-center z-50 p-6 text-center"><p class="mb-4 text-lg font-bold">Test to'liq ekran (Fullscreen) rejimida ishlanadi.</p><button type="button" onclick="goFS()" class="bg-blue-600 hover:bg-blue-700 px-8 py-3.5 rounded-2xl font-bold transition shadow-lg">Fullscreen Boshlash va Taymerni yoqish</button></div>
+<div id="blk_modal" class="fixed inset-0 bg-red-950/95 text-white flex flex-col items-center justify-center z-50 p-6 {% if attempt.status != 'blocked' %}hidden{% endif %}"><div class="bg-white text-slate-800 p-8 rounded-2xl max-w-md w-full shadow-2xl"><h2 class="text-2xl font-bold text-red-600 mb-2">Siz bloklandingiz!</h2><p class="text-sm text-slate-500 mb-4">Ekranni tark etganingiz uchun test vaqtincha to'xtatildi.</p><textarea id="excuse" class="w-full border p-3 rounded-xl mb-3 text-sm focus:outline-none focus:border-blue-600" placeholder="Ustozga kechirim xabari..."></textarea><button type="button" onclick="sendExc()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm">Yuborish</button><p id="exc_msg" class="text-green-600 text-xs mt-3 text-center font-bold"></p></div></div>
+
+<form id="tform" method="post" action="{% url 'submit_test' attempt.id %}" class="space-y-4">{% csrf_token %}
+{% for q in test.questions.all %}
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+<div class="flex justify-between items-center mb-2"><b class="text-base">{{ q.order }}. {{ q.text }} {% if q.question_type == 'multiple' %}<span class="text-xs text-purple-600 font-bold">(Bir nechta javob tanlash mumkin)</span>{% endif %}</b><button type="button" onclick="comp({{ q.id }})" class="text-xs text-red-600 font-bold hover:underline">Shikoyat / Apellyatsiya</button></div>
+
+{% if complaint_comments %}
+    {% for qid, comment in complaint_comments.items %}
+        {% if qid == q.id %}
+        <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
+            <b>Ustozning apellyatsiya bo'yicha izohi:</b> {{ comment }}
+        </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+{% if q.question_type == 'single' %}
+    {% for o in q.options.all %}<label class="block border border-slate-200 p-3 rounded-xl mt-2 hover:bg-slate-50 cursor-pointer transition"><input type="radio" name="question_{{ q.id }}" value="{{ o.id }}" class="mr-2 accent-blue-600"> {{ o.text }}</label>{% endfor %}
+{% elif q.question_type == 'multiple' %}
+    {% for o in q.options.all %}<label class="block border border-slate-200 p-3 rounded-xl mt-2 hover:bg-slate-50 cursor-pointer transition"><input type="checkbox" name="question_multi_{{ q.id }}" value="{{ o.id }}" class="mr-2 accent-blue-600"> {{ o.text }}</label>{% endfor %}
+{% elif q.question_type == 'open' %}
+    <input name="question_open_{{ q.id }}" placeholder="Javobingizni yozing..." class="w-full border border-slate-200 p-3 rounded-xl mt-2 focus:outline-none focus:border-blue-600">
+{% endif %}</div>{% endfor %}
+<button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg transition shadow-md">Testni Yakunlash</button>
+<p class="text-xs text-slate-400 text-center mt-2">*Shikoyat yoki Apellyatsiya yuborilganda o'quvchi bloklanmaydi.</p></form>
+<script>
+let sec = {{ attempt.remaining_seconds }}; const token = "{{ csrf_token }}"; let timerStarted = false; let isComplaining = false;
+function goFS(){ document.documentElement.requestFullscreen().catch(()=>{}); document.getElementById('fs_gate').classList.add('hidden'); timerStarted = true; }
+function viol(){ if(!timerStarted || isComplaining) return; fetch("{% url 'report_violation' attempt.id %}", {method:'POST', headers:{'X-CSRFToken':token}}).then(()=>document.getElementById('blk_modal').classList.remove('hidden')); }
+document.addEventListener('fullscreenchange', ()=>{ if(!document.fullscreenElement) viol(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden) viol(); });
+function sendExc(){ let fd=new FormData(); fd.append('excuse_message', document.getElementById('excuse').value); fetch("{% url 'send_excuse' attempt.id %}", {method:'POST', headers:{'X-CSRFToken':token}, body:fd}).then(()=>document.getElementById('exc_msg').innerText='Ustozga muvaffaqiyatli yuborildi!'); }
+function comp(qid){ 
+    isComplaining = true; 
+    let r=prompt("Shikoyat yoki Apellyatsiya sababini yozing:"); 
+    if(!r) { isComplaining = false; return; }
+    let fd=new FormData(); fd.append('reason',r); 
+    fetch("/question/"+qid+"/complaint/", {method:'POST', headers:{'X-CSRFToken':token}, body:fd}).then(()=>{ alert("Yuborildi!"); isComplaining = false; }).catch(()=>isComplaining=false); 
+}
+setInterval(()=>{ if(timerStarted && sec>0){ sec--; document.getElementById('timer').innerText=Math.floor(sec/60)+":"+(sec%60<10?'0':'')+(sec%60); } else if(timerStarted && sec<=0) { document.getElementById('tform').submit(); } }, 1000);
+setInterval(()=>{ fetch("{% url 'attempt_status' attempt.id %}").then(r=>r.json()).then(d=>{ if(d.status==='in_progress') { document.getElementById('blk_modal').classList.add('hidden'); } else if(d.status==='completed' || d.status==='disqualified') { location.href="/"; } }); }, 3000);
+</script>
+{% endif %}
+{% endblock %}

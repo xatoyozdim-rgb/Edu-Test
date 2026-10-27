@@ -1,0 +1,13 @@
+{% extends 'accounts/base.html' %}{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+<h2 class="font-bold mb-4 text-lg">📊 Mening Barcha Natijalarim</h2>
+{% for a in my_attempts %}
+<div class="border-b border-slate-100 py-3 flex justify-between items-center text-sm">
+<span><b>{{ a.test.title }}</b> (Urinish: {{ a.attempt_number }}, {{ a.get_status_display }})</span>
+<b class="text-blue-600">{{ a.score }} ball ({{ a.correct_count }}/{{ a.total_questions }})</b>
+</div>
+{% empty %}
+<p class="text-slate-400 text-sm">Hali test ishlamagansiz.</p>
+{% endfor %}
+</div>
+{% endblock %}

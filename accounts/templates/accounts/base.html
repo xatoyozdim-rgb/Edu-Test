@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><title>EDU-TEST — Zamonaviy Test Platformasi</title><script src="https://cdn.tailwindcss.com"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script></head>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans antialiased overflow-x-hidden">
+{% if user.is_authenticated %}
+<div class="flex h-screen overflow-hidden">
+    <!-- Chap Sidebar -->
+    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 p-4 shrink-0 overflow-y-auto">
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-3 mb-6 px-2">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md text-white font-black text-xl">ET</div>
+            <div>
+                <span class="text-xl font-black text-blue-600 tracking-wider block leading-none">EDU-TEST</span>
+                <span class="text-[9px] font-bold text-slate-400 tracking-widest uppercase">Platformasi</span>
+            </div>
+        </a>
+        <nav class="space-y-1">
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>🏠</span> Bosh sahifa
+            </a>
+            {% if user.is_teacher %}
+            <a href="{% url 'teacher_tests' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>☁️</span> Mening Testlarim (Cloud)
+            </a>
+            <a href="{% url 'students_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>👥</span> O'quvchilar
+            </a>
+            <a href="{% url 'teacher_complaints' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>⚠️</span> Shikoyat va Takliflar
+            </a>
+            <a href="{% url 'test_create' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>➕</span> Yangi test yaratish
+            </a>
+            <a href="{% url 'sample_docx' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>📥</span> Namuna .docx fayl
+            </a>
+            {% else %}
+            <a href="{% url 'student_rankings' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>🏆</span> O'quvchilar Reytingi
+            </a>
+            <a href="{% url 'student_results' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>📊</span> Mening Natijalarim
+            </a>
+            {% endif %}
+            <a href="{% url 'profile' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 text-slate-600 font-medium transition">
+                <span>👤</span> Profil sozlamalari
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-slate-100">
+            <a href="{% url 'logout' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 font-bold transition text-sm">
+                <span>🚪</span> Tizimdan chiqish
+            </a>
+        </div>
+    </aside>
+
+    <!-- Asosiy Tarkib Konteyneri -->
+    <div class="flex flex-col flex-1 h-full overflow-hidden">
+        <!-- Yuqori Header (har doim Chiqish tugmasi bilan) -->
+        <header class="bg-white border-b border-slate-200 px-6 py-3.5 flex justify-between items-center shadow-xs shrink-0">
+            <div class="flex items-center gap-3 md:hidden">
+                <a href="{% url 'dashboard' %}" class="font-black text-blue-600 text-lg">EDU-TEST</a>
+            </div>
+            <div class="hidden md:block">
+                <span class="text-sm font-bold text-slate-600">Xush kelibsiz, <span class="text-blue-600">{{ user.get_display_name }}</span>!</span>
+                {% if user.is_teacher and user.google_email %}
+                <span class="ml-2 text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-semibold">☁️ Google Cloud: {{ user.google_email }}</span>
+                {% endif %}
+            </div>
+            <div class="flex gap-3 items-center">
+                <span class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                    {% if user.is_teacher %}Ustoz ({{ user.subject|default:"Fan kiritilmagan" }}){% else %}O'quvchi, {{ user.grade }}-{{ user.letter }}{% endif %}
+                </span>
+                <a href="{% url 'logout' %}" class="border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">🚪 Chiqish</a>
+            </div>
+        </header>
+
+        <!-- Sahifa Asosiy Scroll Qismi -->
+        <main class="flex-1 overflow-y-auto p-6 bg-slate-100">
+            <div class="max-w-5xl mx-auto">
+                {% if messages %}{% for m in messages %}<div class="mb-4 p-3.5 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm font-bold">{{ m }}</div>{% endfor %}{% endif %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+{% else %}
+<div class="max-w-6xl mx-auto p-6">{% block content_guest %}{% endblock %}</div>
+{% endif %}
+</body></html>

@@ -1,0 +1,65 @@
+{% extends 'accounts/base.html' %}{% block content %}
+{% if user.is_teacher %}
+<!-- 2-talab: O'qituvchi panelida Chiqish tugmasi -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold">Ustoz Paneli: {{ user.get_display_name }}</h1>
+        <p class="text-xs text-emerald-700 font-semibold mt-0.5">☁️ Testlaringiz shaxsiy Google Cloud ({{ user.google_email|default:"Google Drive" }}) xotirangizda saqlanadi</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'sample_docx' %}" class="border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl font-bold transition text-sm">📥 Namuna .docx</a>
+        <a href="{% url 'test_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm text-sm">+ Yangi Test</a>
+        <a href="{% url 'logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm text-sm">🚪 Chiqish</a>
+    </div>
+</div>
+
+{% if blocked_attempts %}<div class="bg-red-50 border border-red-300 p-4 rounded-xl mb-6"><h2 class="font-bold text-red-700 mb-2">Bloklangan o'quvchilar</h2>{% for a in blocked_attempts %}<div class="bg-white p-3 rounded-xl shadow-xs flex justify-between items-center mb-2"><span><b>{{ a.student.get_display_name|default:"Anonim" }}</b> ({{ a.test.title }}) — Kechirim: "{{ a.excuse_message|default:'-' }}"</span><form method="post" action="{% url 'monitor_students' a.test.id %}" class="flex gap-2">{% csrf_token %}<input type="hidden" name="attempt_id" value="{{ a.id }}"><button name="decision" value="forgive" class="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Kechirish</button><button name="decision" value="disqualify" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">Chetlatish</button></form></div>{% endfor %}</div>{% endif %}
+
+<!-- 1-talab: Ustozlar Reytingi (1,2,3-o'rin bir xil tilla rang; Top 10% yashil; Top 70% ko'k; qolgani sariq) -->
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+    <h2 class="text-xl font-bold">👨‍🏫 O'qituvchilar Reytingi (Test yechilganlar soni bo'yicha)</h2>
+    <div class="flex flex-wrap gap-1.5 text-[11px] font-bold">
+        <span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-950 border border-yellow-400">1-3 O'rin: Tilla</span>
+        <span class="px-2.5 py-1 rounded-lg bg-green-100 text-green-900 border border-green-400">Top 10%: Yashil</span>
+        <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-900 border border-blue-300">Top 70%: Ko'k</span>
+        <span class="px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-800 border border-yellow-300">Qolgani: Sariq</span>
+    </div>
+</div>
+<div class="overflow-x-auto"><table class="w-full text-sm text-left border-separate border-spacing-y-1.5">
+<thead><tr class="bg-slate-50 text-slate-600"><th class="p-3">O'rin</th><th class="p-3">O'qituvchi</th><th class="p-3">Fan</th><th class="p-3">Testlar Soni</th><th class="p-3">Jami Yechilganlar</th><th class="p-3">Daraja / Effekt</th></tr></thead>
+<tbody>
+{% for tr in teacher_leaderboard %}
+<tr class="border rounded-xl transition {{ tr.tier_class }}">
+<td class="p-3 font-black">#{{ tr.rank }}</td>
+<td class="p-3 font-extrabold">{{ tr.teacher.get_display_name }}</td>
+<td class="p-3">{{ tr.teacher.subject|default:"-" }}</td>
+<td class="p-3 font-semibold">{{ tr.test_count }} ta</td>
+<td class="p-3 font-black text-base">{{ tr.total_solves }} ta</td>
+<td class="p-3 font-bold">{{ tr.badge }}</td>
+</tr>
+{% empty %}
+<tr><td colspan="6" class="p-4 text-center text-slate-400">O'qituvchilar reytingi hali shakllanmagan</td></tr>
+{% endfor %}
+</tbody></table></div>
+</div>
+{% else %}
+<!-- 2-talab: O'quvchi Panelida Chiqish tugmasi -->
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">O'quvchi Paneli: {{ user.get_display_name }}</h1>
+    <a href="{% url 'logout' %}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl font-bold transition shadow-sm text-sm">🚪 Chiqish</a>
+</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-blue-600">Jami Yechilgan: <b class="text-xl text-blue-600 block mt-1">{{ stats.total_done|default:0 }} ta</b></div>
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-green-600">O'rtacha Foiz (Haftalik): <b class="text-xl text-green-600 block mt-1">{{ weekly_pct|floatformat:1 }}%</b></div>
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-indigo-600">O'rtacha Foiz (Oylik): <b class="text-xl text-indigo-600 block mt-1">{{ monthly_pct|floatformat:1 }}%</b></div>
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">Maksimal Ball: <b class="text-xl text-amber-600 block mt-1">{{ stats.max_score|default:0|floatformat:1 }}</b></div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6"><h2 class="font-bold mb-4 text-lg">Mavjud Faol Testlar</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4">{% for t in available_tests %}<div class="border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-xs"><div><b>{{ t.title }}</b> ({{ t.get_test_type_display }})<br><span class="text-xs text-slate-500">Deadline: {{ t.deadline|default:'Belgilanmagan' }}</span></div><div class="flex"><a href="{% url 'test_view' t.id %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition">Boshlash</a></div></div>{% empty %}<p class="text-slate-400 text-sm">Hozircha faol testlar yo'q.</p>{% endfor %}</div></div>
+
+{% if anon_tests %}
+<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-6"><h2 class="font-bold mb-4 text-lg">Anonim So'rovnomalar</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4">{% for t in anon_tests %}<div class="border border-slate-200 p-4 rounded-xl flex justify-between items-center shadow-xs"><div><b>{{ t.title }}</b></div><a href="{% url 'test_view' t.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-bold text-sm transition">Qatnashish</a></div>{% endfor %}</div></div>
+{% endif %}
+{% endif %}{% endblock %}

@@ -1,0 +1,15 @@
+{% extends 'accounts/base.html' %}{% block content %}<form method="post" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-4">{% csrf_token %}<h1 class="text-2xl font-bold text-blue-600">Profilni tahrirlash</h1>
+<div><label class="text-xs font-bold text-slate-600">Ism va Familiya:</label><input name="full_name" value="{{ user.full_name|default:'' }}" required class="w-full border p-3 rounded-xl mt-1"></div>
+{% if user.is_teacher %}
+<div><label class="text-xs font-bold text-slate-600">Ulangan Google Akkaunt (Faqat Google orqali kiriladi):</label><input value="{{ user.google_email|default:user.username }}" disabled class="w-full border p-3 rounded-xl mt-1 bg-emerald-50 text-emerald-800 font-bold"></div>
+<div><label class="text-xs font-bold text-slate-600">Fan:</label><input name="subject" value="{{ user.subject|default:'' }}" class="w-full border p-3 rounded-xl mt-1"></div>
+<div><label class="text-xs font-bold text-slate-600">Shaxsiy Google Cloud Bucket nomi (bo'sh qolsa Google Drive):</label><input name="google_cloud_bucket" value="{{ user.google_cloud_bucket|default:'' }}" placeholder="my-teacher-cloud-bucket" class="w-full border p-3 rounded-xl mt-1"></div>
+{% else %}
+<div><label class="text-xs font-bold text-slate-600">Login (O'zgarmaydi):</label><input value="{{ user.username }}" disabled class="w-full border p-3 rounded-xl mt-1 bg-slate-100 text-slate-500"></div>
+<div><label class="text-xs font-bold text-slate-600">Yangi parol (bo'sh qoldirsangiz o'zgarmaydi):</label><input name="password" type="password" placeholder="Yangi parol" class="w-full border p-3 rounded-xl mt-1"></div>
+<div class="grid grid-cols-2 gap-2">
+<div><label class="text-xs font-bold text-slate-600">Sinf:</label><select name="grade" class="border p-3 rounded-xl w-full mt-1"><option value="7" {% if user.grade == '7' %}selected{% endif %}>7</option><option value="8" {% if user.grade == '8' %}selected{% endif %}>8</option><option value="9" {% if user.grade == '9' %}selected{% endif %}>9</option><option value="10" {% if user.grade == '10' %}selected{% endif %}>10</option><option value="11" {% if user.grade == '11' %}selected{% endif %}>11</option></select></div>
+<div><label class="text-xs font-bold text-slate-600">Harf:</label><select name="letter" class="border p-3 rounded-xl w-full mt-1"><option value="A" {% if user.letter == 'A' %}selected{% endif %}>A</option><option value="B" {% if user.letter == 'B' %}selected{% endif %}>B</option><option value="D" {% if user.letter == 'D' %}selected{% endif %}>D</option></select></div>
+</div>
+{% endif %}
+<button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm">Yangilash</button></form>{% endblock %}

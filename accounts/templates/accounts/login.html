@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="uz"><head><meta charset="UTF-8"><title>EDU-TEST — Kirish</title><script src="https://cdn.tailwindcss.com"></script></head>
+<body class="h-screen flex bg-white"><div class="w-full lg:w-1/2 flex flex-col justify-center items-center p-10"><div class="flex items-center gap-3 mb-6"><div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg text-white font-black text-2xl">ET</div><div><span class="text-4xl font-black text-blue-600 tracking-wider block leading-none">EDU-TEST</span><span class="text-xs font-bold text-slate-400 tracking-widest uppercase">Test va Baholash Tizimi</span></div></div>
+
+<div class="w-full max-w-md space-y-4">
+{% if messages %}{% for m in messages %}<div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold">{{ m }}</div>{% endfor %}{% endif %}
+
+<!-- Ustozlar uchun faqat Google orqali kirish bloki -->
+<div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+    <div class="text-xs font-bold text-amber-900 uppercase tracking-wider">👨‍🏫 Ustozlar uchun kirish</div>
+    <p class="text-xs text-amber-800">Ustozlar tizimga va shaxsiy Google Cloud testlariga faqat Google akkaunti orqali kiradilar:</p>
+    <a href="{% url 'google_login' %}" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 py-3 rounded-xl font-bold transition shadow-xs">
+        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/><path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/><path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"/><path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 21.4 7.4 24 12 24z"/></svg>
+        <span>Google akkaunt orqali kirish (Ustoz)</span>
+    </a>
+</div>
+
+<div class="relative flex py-1 items-center">
+    <div class="flex-grow border-t border-slate-200"></div>
+    <span class="flex-shrink mx-4 text-slate-400 text-xs font-bold uppercase">O'quvchilar uchun</span>
+    <div class="flex-grow border-t border-slate-200"></div>
+</div>
+
+<form method="post" class="space-y-3">{% csrf_token %}
+<input name="username" required placeholder="O'quvchi logini" class="w-full border p-3 rounded-xl focus:outline-none focus:border-blue-600">
+<input name="password" type="password" required placeholder="Parol" class="w-full border p-3 rounded-xl focus:outline-none focus:border-blue-600">
+<button class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-md">O'quvchi sifatida kirish</button>
+<a href="{% url 'signup' %}" class="block text-center border py-3 rounded-xl font-bold hover:bg-slate-50 transition">Ro'yxatdan o'tish</a>
+</form>
+</div></div>
+<div class="hidden lg:flex lg:w-1/2 bg-blue-900 flex-col justify-between items-center p-12 text-white relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-900 to-slate-950 opacity-95"></div>
+<div class="relative z-10 text-center space-y-2 mt-4"><h2 class="text-3xl font-black tracking-wide leading-tight">EDU-TEST Ta'lim Portali</h2><p class="text-blue-200 text-sm font-medium">Shaxsiy Google Cloud bilan integratsiyalashgan baholash platformasi</p></div>
+<div class="relative z-10 flex flex-col items-center space-y-6 my-auto"><div class="bg-white/10 backdrop-blur-md border border-white/15 px-8 py-6 rounded-2xl text-center max-w-md shadow-2xl"><p class="text-sm text-blue-100 font-medium">"Ustozlarning barcha testlari to'g'ridan-to'g'ri ularning shaxsiy Google Cloud xotirasida xavfsiz saqlanadi."</p></div></div>
+<div class="relative z-10 text-xs text-blue-300 text-center">&copy; 2026 EDU-TEST Platform. Barcha huquqlar himoyalangan.</div></div></body></html>
