@@ -3,7 +3,7 @@ from . import views
 urlpatterns = [
     path('', views.dashboard_view, name='dashboard'),
     path('login/', views.login_view, name='login'),
-    path('signup/', views.signup_view, name='signup'),
+    path('signup.html', views.signup_view, name='signup'),
     path('auth/google/login/', views.google_login_start, name='google_login'),
     path('auth/google/callback/', views.google_login_callback, name='google_callback'),
     path('profile/', views.profile_view, name='profile'),
