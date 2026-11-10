@@ -1,6 +1,28 @@
-{% extends 'accounts/base.html' %}{% block content %}
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-<h1 class="text-2xl font-bold mb-4">Shikoyat va Takliflar</h1>
-{% for c in complaints %}<div class="border border-slate-200 p-4 rounded-xl flex justify-between items-center mb-3"><span><b>{{ c.student.get_display_name|default:"Anonim" }}</b> [{{ c.status }}]: "{{ c.reason }}"</span><a href="{% url 'review_complaint' c.id %}" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Ko'rib chiqish</a></div>{% empty %}<p class="text-slate-400 text-sm">Hozircha shikoyatlar yo'q.</p>{% endfor %}
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O'qituvchi Shikoyatlari | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-slate-900">Kelib Tushgan Shikoyat va Takliflar</h1>
+      <a href="/dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Dashboard</a>
+    </div>
+
+    <div class="space-y-4">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
+        <div>
+          <span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">Jarayonda</span>
+          <h3 class="font-bold text-slate-900 mt-2">Matematika testidagi 12-savol xato tuzilgan</h3>
+          <p class="text-xs text-slate-500">Yuboruvchi: Jasur Rahimov (9-A sinf)</p>
+        </div>
+        <a href="/complaint_review.html" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition">Ko'rib chiqish</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

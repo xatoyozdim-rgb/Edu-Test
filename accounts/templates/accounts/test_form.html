@@ -1,67 +1,157 @@
-{% extends 'accounts/base.html' %}{% block content %}
-<form method="post" enctype="multipart/form-data" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">{% csrf_token %}
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-    <h1 class="text-xl font-bold text-blue-600">Test Yaratish va Tahrirlash</h1>
-    <span class="text-xs bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-xl font-bold">
-        ☁️ Shaxsiy Google Cloud: {{ user.google_email|default:user.username }}
-    </span>
-</div>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><input name="title" value="{{ test.title|default:'' }}" required placeholder="Test nomi" class="border p-3 rounded-xl"><input name="subject" value="{{ test.subject|default:'' }}" required placeholder="Fan" class="border p-3 rounded-xl"><input type="number" name="duration_minutes" value="{{ test.duration_minutes|default:45 }}" required placeholder="Daqiqa" class="border p-3 rounded-xl"></div>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 items-center"><div><label class="text-xs font-bold text-slate-600">Test turi:</label><select name="test_type" class="border p-3 rounded-xl w-full mt-1"><option value="exam" {% if test.test_type == 'exam' %}selected{% endif %}>Nazorat ishi</option><option value="practice" {% if test.test_type == 'practice' %}selected{% endif %}>Mashg'ulot</option><option value="survey" {% if test.test_type == 'survey' %}selected{% endif %}>So'rovnoma</option><option value="anonymous" {% if test.test_type == 'anonymous' %}selected{% endif %}>Anonim</option></select></div>
-<div><label class="text-xs font-bold text-slate-600">Ustozlar yechadimi?:</label><input type="checkbox" name="allow_teachers" {% if test.allow_teachers %}checked{% endif %} class="block mt-3 w-5 h-5 accent-blue-600"></div>
-<div><label class="text-xs font-bold text-slate-600">Sinf:</label><select name="target_grade" class="border p-3 rounded-xl w-full mt-1"><option value="barcha">Barcha</option><option value="7" {% if test.target_grade == '7' %}selected{% endif %}>7</option><option value="8" {% if test.target_grade == '8' %}selected{% endif %}>8</option><option value="9" {% if test.target_grade == '9' %}selected{% endif %}>9</option><option value="10" {% if test.target_grade == '10' %}selected{% endif %}>10</option><option value="11" {% if test.target_grade == '11' %}selected{% endif %}>11</option></select></div>
-<div><label class="text-xs font-bold text-slate-600">Harf:</label><select name="target_letter" class="border p-3 rounded-xl w-full mt-1"><option value="barchasi">Barchasi</option><option value="A" {% if test.target_letter == 'A' %}selected{% endif %}>A</option><option value="B" {% if test.target_letter == 'B' %}selected{% endif %}>B</option><option value="D" {% if test.target_letter == 'D' %}selected{% endif %}>D</option></select></div></div>
-<div><label class="text-xs font-bold text-slate-600">Oxirgi muddat (Deadline):</label><input type="datetime-local" name="deadline" value="{% if test.deadline %}{{ test.deadline|date:'Y-m-d\\TH:i' }}{% endif %}" class="border p-3 rounded-xl w-full mt-1"></div>
-
-<div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl"><label class="font-bold block mb-1 text-sm text-blue-900">📄 .docx fayldan yuklash (Yuklangan savollar avtomatik shaxsiy Google Cloud'ingizga saqlanadi):</label><input type="file" name="docx_file" accept=".docx" class="mt-2 text-sm"><a href="{% url 'sample_docx' %}" class="text-xs text-blue-600 font-bold underline mt-2 inline-block">📥 Namuna Word faylni yuklab olish</a></div>
-
-{% if test and test.questions.exists %}
-<div class="mt-6 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-6">
-<h2 class="font-bold text-lg text-slate-800">Mavjud Savollar va Variantlarni Tahrirlash ({{ test.questions.count }} ta):</h2>
-{% for q in test.questions.all %}
-<div class="border border-slate-200 bg-white p-5 rounded-2xl shadow-xs space-y-3">
-    <div class="flex justify-between items-center gap-4">
-        <label class="font-bold text-sm text-slate-700">{{ q.order }}-Savol Matni:</label>
-        <div class="flex items-center gap-2">
-            <label class="text-xs font-bold text-slate-600">Savol Balli:</label>
-            <input name="q_points_{{ q.id }}" value="{{ q.points }}" class="border p-1.5 rounded-lg w-20 text-center text-sm font-bold border-blue-200">
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Yaratish | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+  <main class="max-w-4xl mx-auto w-full p-6 my-8">
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-8">
+      
+      <!-- HEADER -->
+      <div class="flex justify-between items-center border-b pb-4 border-slate-100">
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">Yangi Test Yaratish</h1>
+          <p class="text-xs text-slate-500">Test parametrlarini belgilang va savollarni kiriting yoki fayldan yuklang</p>
         </div>
-    </div>
-    <textarea name="q_text_{{ q.id }}" class="w-full border p-3 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-600">{{ q.text }}</textarea>
+        <a href="/dashboard.html" class="px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-medium transition">Bekor qilish</a>
+      </div>
 
-    {% if q.question_type in 'single multiple' %}
-    <div class="space-y-2 mt-2">
-        <label class="text-xs font-bold text-slate-500 block">Variantlar (To'g'ri variantlarni belgilang):</label>
-        {% for o in q.options.all %}
-        <div class="flex items-center gap-3">
-            <input type="checkbox" name="q_correct_opts_{{ q.id }}" value="{{ o.id }}" {% if o.is_correct %}checked{% endif %} class="w-5 h-5 accent-blue-600">
-            <input name="opt_text_{{ o.id }}" value="{{ o.text }}" class="border p-2.5 rounded-xl text-sm flex-1">
+      <!-- FAYLDAN FAYL YUKLASH BO'LIMI (EXCEL / WORD / TXT) -->
+      <div class="p-6 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 transition text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto text-2xl font-bold">
+          📁
         </div>
-        {% endfor %}
-    </div>
-    {% elif q.question_type == 'open' %}
-    <div class="mt-2">
-        <label class="text-xs font-bold text-slate-500 block">Ochiq savolning to'g'ri javobi (Vergul bilan ajratilgan):</label>
-        <input name="q_open_ans_{{ q.id }}" value="{{ q.correct_text_answers|default:'' }}" class="border p-2.5 rounded-xl text-sm w-full mt-1">
-    </div>
-    {% endif %}
+        <div>
+          <h3 class="font-bold text-slate-900 text-base">Testlarni fayldan ommaviy yuklash</h3>
+          <p class="text-xs text-slate-500 mt-1">Excel (.xlsx), Word (.docx) yoki Matnli (.txt) fayllarni ushbu yerga tashlang yoki tanlang</p>
+        </div>
+        <div class="flex justify-center items-center gap-3 pt-2">
+          <input type="file" id="test-file-upload" class="hidden" accept=".xlsx,.docx,.txt,.csv">
+          <label for="test-file-upload" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition">
+            Faylni Tanlash
+          </label>
+          <a href="#" class="text-xs text-blue-600 font-semibold hover:underline">▶ Andoza faylni yuklab olish</a>
+        </div>
+      </div>
 
-    <div class="flex justify-end pt-2 border-t border-slate-100">
-        <button type="submit" name="action_type" value="delete_question" onclick="document.getElementsByName('question_id')[0].value='{{ q.id }}'; return confirm('Ushbu savolni o'chirishni tasdiqlaysizmi?');" class="text-xs text-red-600 font-bold hover:underline">Savolni o'chirish</button>
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-slate-200"></div>
+        <span class="flex-shrink mx-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Yoki qo'lda to'ldiring</span>
+        <div class="flex-grow border-t border-slate-200"></div>
+      </div>
+
+      <!-- QO'LDA TUSHIRILADIGAN FORM -->
+      <form class="space-y-6">
+        
+        <!-- ASOSIY PARAMETRLAR VA KATEGORIYALAR -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Test Nomi</label>
+            <input type="text" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm" placeholder="Masalan: Fizika 8-sinf">
+          </div>
+
+          <!-- KENGAYTIRILGAN KATEGORIYALAR -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Fan / Kategoriya</label>
+            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+              <option value="" disabled selected>Kategoriyani tanlang</option>
+              <option>Matematika</option>
+              <option>Fizika</option>
+              <option>Informatika va AT</option>
+              <option>Kimyo</option>
+              <option>Biologiya</option>
+              <option>O'zbek tili va Adabiyot</option>
+              <option>Ingliz tili (IELTS / CEFR)</option>
+              <option>Tarix va Huquq</option>
+              <option>Geografiya</option>
+              <option>Olimpiada testlari</option>
+              <option>Mantiqiy savollar / IQ</option>
+              <option>DTM standart testlari</option>
+              <option>Umumiy Dunyoqarash</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Mo'ljallangan Sinf</label>
+            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+              <option value="">Barcha sinflar</option>
+              <option>5-sinf</option>
+              <option>6-sinf</option>
+              <option>7-sinf</option>
+              <option>8-sinf</option>
+              <option>9-sinf</option>
+              <option>10-sinf</option>
+              <option>11-sinf</option>
+              <option>Abituriyentlar / Talabalar</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Vaqt Chegarasi (daqiqa)</label>
+            <input type="number" min="5" max="180" value="45" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Qiyinchilik Darajasi</label>
+            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+              <option>Oson (O'rganuvchilar uchun)</option>
+              <option selected>O'rtacha (Standart)</option>
+              <option>Murakkab (Olimpiada/DTM)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">O'tish Balli (%)</label>
+            <input type="number" min="10" max="100" value="60" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+          </div>
+        </div>
+
+        <!-- SAVOLLAR RO'YXATI -->
+        <div class="space-y-4 pt-4">
+          <h2 class="text-lg font-bold text-slate-900">Savollar Bloki</h2>
+          
+          <div class="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-bold text-slate-800 text-sm">1-Savol</h3>
+              <span class="text-xs text-red-500 font-medium cursor-pointer hover:underline">O'chirish</span>
+            </div>
+            <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 text-sm" placeholder="Savol matnini kiriting...">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-emerald-700 mb-1">A Variant (To'g'ri javob)</label>
+                <input type="text" class="w-full rounded-xl border border-emerald-300 bg-emerald-50/30 px-3 py-2 text-sm focus:outline-none focus:border-emerald-600" placeholder="To'g'ri javob">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">B Variant</label>
+                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">C Variant</label>
+                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">D Variant</label>
+                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button type="button" class="w-full py-3 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 font-semibold hover:bg-blue-50 transition text-sm">
+          + Yangi Savol Qo'shish
+        </button>
+
+        <div class="flex justify-end gap-4 pt-4 border-t border-slate-100">
+          <button type="submit" class="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md transition">
+            Testni Saqlash va Chop Etish
+          </button>
+        </div>
+      </form>
     </div>
-</div>
-{% endfor %}
-<input type="hidden" name="question_id" value="">
-</div>
-{% endif %}
-
-<div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 mt-4"><div class="font-bold text-sm">Yangi savol qo'shish (ixtiyoriy):</div>
-<select name="manual_q_type" class="border p-3 rounded-xl w-full mb-2"><option value="single">Yagona tanlov</option><option value="multiple">Bir nechta tanlov</option><option value="open">Ochiq savol (qisqa yozma)</option></select>
-<textarea name="manual_q_text" placeholder="Yangi savol matni" class="w-full border p-3 rounded-xl"></textarea>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-2"><input name="manual_opt_1" placeholder="A variant" class="border p-2.5 rounded-xl"><input name="manual_opt_2" placeholder="B variant" class="border p-2.5 rounded-xl"><input name="manual_opt_3" placeholder="C variant" class="border p-2.5 rounded-xl"><input name="manual_opt_4" placeholder="D variant" class="border p-2.5 rounded-xl"></div>
-<input name="manual_correct_text" placeholder="Ochiq savol javoblari (vergul bilan)" class="w-full border p-3 rounded-xl text-sm">
-<div class="flex gap-4 items-center text-sm">To'g'ri variantlar indeksi (masalan: 1 yoki 1,3): <input name="manual_correct_opts" placeholder="1" class="border p-2 rounded-xl w-24"> Ball: <input name="manual_q_points" value="1" class="border p-2 rounded-xl w-16"></div></div>
-
-<div class="flex gap-3 pt-4"><button name="save_mode" value="draft" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm">Qoralama (Shaxsiy Cloud'da saqlash)</button><button name="save_mode" value="published" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-sm">Testni faollashtirish va Cloud'ga yuklash</button></div></form>
-{% endblock %}
+  </main>
+</body>
+</html>

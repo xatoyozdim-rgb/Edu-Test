@@ -1,13 +1,29 @@
-{% extends 'accounts/base.html' %}{% block content %}
-<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-<h2 class="font-bold mb-4 text-lg">📊 Mening Barcha Natijalarim</h2>
-{% for a in my_attempts %}
-<div class="border-b border-slate-100 py-3 flex justify-between items-center text-sm">
-<span><b>{{ a.test.title }}</b> (Urinish: {{ a.attempt_number }}, {{ a.get_status_display }})</span>
-<b class="text-blue-600">{{ a.score }} ball ({{ a.correct_count }}/{{ a.total_questions }})</b>
-</div>
-{% empty %}
-<p class="text-slate-400 text-sm">Hali test ishlamagansiz.</p>
-{% endfor %}
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Natijasi | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xl text-center space-y-6">
+    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto">🎉</div>
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Test Yakunlandi!</h1>
+      <p class="text-sm text-slate-500 mt-1">Sizning natijangiz avtomatik hisoblandi</p>
+    </div>
+    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-slate-500">To'g'ri javoblar</p>
+        <p class="text-xl font-bold text-emerald-600">18 / 20</p>
+      </div>
+      <div>
+        <p class="text-xs text-slate-500">Umumiy Ball</p>
+        <p class="text-xl font-bold text-blue-600">90%</p>
+      </div>
+    </div>
+    <a href="/dashboard.html" class="block w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition shadow-md">Dashboard ga qaytish</a>
+  </div>
+</body>
+</html>

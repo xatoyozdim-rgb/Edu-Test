@@ -1,7 +1,37 @@
-{% extends 'accounts/base.html' %}{% block content %}<div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200"><h1 class="text-xl font-bold mb-4">Kuzatuv: {{ test.title }}</h1>
-<div class="overflow-x-auto"><table class="w-full text-sm text-left">
-<tr class="bg-slate-50 border-b border-slate-200"><th class="p-3">O'quvchi</th><th class="p-3">Sinf</th><th class="p-3">Holat</th><th class="p-3">Buzilish</th><th class="p-3">Kechirim xabari</th><th class="p-3">Ball</th><th class="p-3">Qaror / Urinish</th></tr>
-{% for a in attempts %}<tr class="border-b border-slate-100"><td class="p-3 font-bold">{{ a.student.get_display_name|default:"Anonim" }}</td><td class="p-3">{% if a.student %}{{ a.student.grade }}-{{ a.student.letter }}{% else %}-{% endif %}</td><td class="p-3">{{ a.get_status_display }}</td><td class="p-3">{{ a.violation_count }}</td><td class="p-3">{{ a.excuse_message|default:'-' }}</td><td class="p-3 font-bold text-blue-600">{{ a.score }}</td>
-<td class="p-3 flex gap-2">{% if a.status == 'blocked' %}<form method="post" class="flex gap-1">{% csrf_token %}<input type="hidden" name="attempt_id" value="{{ a.id }}"><button name="decision" value="forgive" class="bg-green-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold">Kechirish</button><button name="decision" value="disqualify" class="bg-red-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold">Chetlatish</button></form>{% endif %}
-<form method="post">{% csrf_token %}<input type="hidden" name="attempt_id" value="{{ a.id }}"><button name="decision" value="add_retry" class="bg-indigo-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold">+ Urinish</button></form></td></tr>{% endfor %}
-</table></div></div>{% endblock %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jonli Monitoring | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto space-y-6">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-slate-900">Jonli Test Monitoringi</h1>
+      <a href="/dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Dashboard</a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <p class="text-sm text-slate-500">Ayni vaqtda online test topshirayotgan o'quvchilar</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-slate-900">Aliyev Vali</h4>
+            <p class="text-xs text-slate-500">Matematika · 12/20 savol</p>
+          </div>
+          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
+          <div>
+            <h4 class="font-bold text-slate-900">Samiroat Zokirova</h4>
+            <p class="text-xs text-slate-500">Fizika · 18/20 savol</p>
+          </div>
+          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

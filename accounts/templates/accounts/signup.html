@@ -1,54 +1,111 @@
-{% extends 'accounts/base.html' %}{% block content_guest %}<form method="post" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-200 space-y-4 my-10">{% csrf_token %}<h1 class="text-2xl font-bold text-blue-600">Ro'yxatdan o'tish</h1>
-{% if messages %}{% for m in messages %}<div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-bold">{{ m }}</div>{% endfor %}{% endif %}
-
-<div>
-    <label class="text-xs font-bold text-slate-600">Rolingizni tanlang:</label>
-    <select id="role_select" name="role" class="w-full border p-3 rounded-xl mt-1 font-bold" onchange="toggleRoleFields()">
-        <option value="student">🎓 O'quvchi</option>
-        <option value="teacher">👨‍🏫 Ustoz (Faqat Google Akkaunt va Shaxsiy Google Cloud)</option>
-    </select>
-</div>
-
-<input name="full_name" required placeholder="Ism va Familiya (masalan: Alisher Navoiy)" class="w-full border p-3 rounded-xl">
-
-<!-- O'quvchi uchun login/parol va sinf maydonlari -->
-<div id="student_fields" class="space-y-4">
-    <input id="st_user" name="username" placeholder="Login (username)" class="w-full border p-3 rounded-xl">
-    <input id="st_pass" name="password" type="password" placeholder="Parol" class="w-full border p-3 rounded-xl">
-    <div class="grid grid-cols-2 gap-2">
-        <select name="grade" class="border p-3 rounded-xl w-full"><option value="barcha">Sinf (Barcha)</option><option value="7">7-sinf</option><option value="8">8-sinf</option><option value="9">9-sinf</option><option value="10">10-sinf</option><option value="11">11-sinf</option></select>
-        <select name="letter" class="border p-3 rounded-xl w-full"><option value="barchasi">Harf (Barchasi)</option><option value="A">A</option><option value="B">B</option><option value="D">D</option></select>
+<!DOCTYPE html>
+<html lang="uz" class="light" style="color-scheme: light;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ro'yxatdan o'tish | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="grid min-h-screen bg-slate-50 text-slate-900 lg:grid-cols-2">
+  <aside class="hidden lg:flex flex-col justify-between p-10 relative overflow-hidden bg-gradient-to-br from-blue-600 via-sky-600 to-blue-800 text-white border-r">
+    <div class="absolute -left-20 -top-20 size-96 rounded-full bg-white/10 blur-3xl"></div>
+    <div class="relative flex items-center gap-3">
+      <img src="/assets/logo4-BS7ymqtK.png" alt="EduTest" class="size-10 object-contain">
+      <span class="text-xl font-bold tracking-wide">EduTest</span>
     </div>
-</div>
-
-<!-- Ustoz uchun fan va shaxsiy Google Cloud maydonlari -->
-<div id="teacher_fields" class="space-y-4 hidden">
-    <input name="subject" placeholder="Fan nomi (masalan: Matematika)" class="w-full border p-3 rounded-xl">
-    <input name="google_cloud_bucket" placeholder="Shaxsiy Google Cloud Bucket nomi (ixtiyoriy, bo'sh qolsa Google Drive ishlatiladi)" class="w-full border p-3 rounded-xl text-sm">
-    <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-        <b>Eslatma:</b> Ustozlar parol ishlatmaydi. Ma'lumotlarni to'ldirib tugmani bosganingizdan so'ng, <b>Google akkauntingiz</b> orqali tasdiqlaysiz va testlaringiz to'g'ridan-to'g'ri o'zingizning Google Cloud xotirangizga bog'lanadi.
+    <div class="relative max-w-md space-y-4">
+      <h2 class="text-3xl font-bold leading-tight">Bilim olamini birga kashf etamiz</h2>
+      <p class="text-sky-100 text-sm leading-relaxed">O'quvchi yoki o'qituvchi sifatida ro'yxatdan o'ting va zamonaviy ta'lim imkoniyatlaridan foydalaning.</p>
     </div>
-</div>
+    <div class="relative text-xs text-sky-200">© 2026 EduTest</div>
+  </aside>
 
-<button id="submit_btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm">Ro'yxatdan o'tish</button>
-<a href="{% url 'login' %}" class="block text-center text-sm text-slate-500 hover:underline">Akkauntingiz bormi? Kirish</a>
-</form>
-<script>
-function toggleRoleFields() {
-    const role = document.getElementById('role_select').value;
-    const stFields = document.getElementById('student_fields');
-    const thFields = document.getElementById('teacher_fields');
-    const btn = document.getElementById('submit_btn');
-    if (role === 'teacher') {
-        stFields.classList.add('hidden');
-        thFields.classList.remove('hidden');
-        btn.innerText = "Ma'lumotlarni saqlash va Google orqali kirish";
-        btn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition shadow-sm";
-    } else {
-        stFields.classList.remove('hidden');
-        thFields.classList.add('hidden');
-        btn.innerText = "Ro'yxatdan o'tish";
-        btn.className = "w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-bold transition shadow-sm";
+  <main class="flex items-center justify-center p-6 sm:p-10">
+    <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold mb-1 text-slate-900">Ro'yxatdan o'tish</h1>
+        <p class="text-sm text-slate-500">Yangi hisob yarating — bir daqiqa vaqt oladi</p>
+      </div>
+
+      <form action="/register" method="POST" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-700">Ism</label>
+            <input type="text" name="first_name" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Ismingiz">
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-700">Familiya</label>
+            <input type="text" name="last_name" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Familiyangiz">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1 text-slate-700">Email</label>
+          <input type="email" name="email" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="email@misol.uz">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1 text-slate-700">Parol</label>
+          <input type="password" name="password" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Yangi parol yaratish">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-2 text-slate-700">Siz kimsiz?</label>
+          <div class="grid grid-cols-2 gap-3">
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition">
+              <input type="radio" name="role" value="STUDENT" onchange="toggleStudentFields(true)" class="text-blue-600 focus:ring-blue-500" required>
+              <span class="text-sm font-medium text-slate-800">O'quvchi</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition">
+              <input type="radio" name="role" value="TEACHER" onchange="toggleStudentFields(false)" class="text-blue-600 focus:ring-blue-500" required>
+              <span class="text-sm font-medium text-slate-800">O'qituvchi</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="student-class-fields" class="hidden grid-cols-2 gap-4 p-4 rounded-xl border border-blue-100 bg-blue-50/40 transition-all duration-300">
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-700">Sinf</label>
+            <select name="student_class" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 transition">
+              <option value="" disabled selected>Sinfni tanlang</option>
+              <option value="7">7-sinf</option>
+              <option value="8">8-sinf</option>
+              <option value="9">9-sinf</option>
+              <option value="10">10-sinf</option>
+              <option value="11">11-sinf</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1 text-slate-700">Sinf harfi</label>
+            <select name="class_letter" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 transition">
+              <option value="" disabled selected>Harfni tanlang</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 font-semibold text-white transition shadow-lg shadow-blue-600/20 mt-2">Ro'yxatdan o'tish</button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-slate-600">
+        Hisobingiz bormi? <a href="/login.html" class="text-blue-600 font-medium hover:underline">Kirish</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    function toggleStudentFields(isStudent) {
+      const fields = document.getElementById('student-class-fields');
+      if (isStudent) {
+        fields.classList.remove('hidden');
+        fields.classList.add('grid');
+      } else {
+        fields.classList.remove('grid');
+        fields.classList.add('hidden');
+      }
     }
-}
-</script>{% endblock %}
+  </script>
+</body>
+</html>

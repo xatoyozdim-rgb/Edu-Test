@@ -1,8 +1,43 @@
-{% extends 'accounts/base.html' %}{% block content %}<form method="post" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4 max-w-xl mx-auto">{% csrf_token %}<h1 class="text-xl font-bold text-blue-600">Shikoyat / Apellyatsiya</h1>
-<div class="p-3 bg-slate-50 rounded-xl text-sm italic border border-slate-200">"{{ complaint.reason }}"</div>
-<textarea name="question_text" class="w-full border p-3 rounded-xl">{{ question.text }}</textarea><input name="question_points" value="{{ question.points }}" class="border p-3 rounded-xl w-full">
-{% for o in question.options.all %}<div class="flex gap-2 items-center"><input type="checkbox" name="correct_option_ids" value="{{ o.id }}" {% if o.is_correct %}checked{% endif %} class="w-5 h-5 accent-blue-600"><input name="opt_text_{{ o.id }}" value="{{ o.text }}" class="border p-2.5 rounded-xl flex-1"></div>{% endfor %}
-<div class="p-3 bg-blue-50 border border-blue-100 rounded-2xl"><label class="text-xs font-bold block mb-1 text-blue-900">➕ Qo'shimcha variant qo'shish:</label><input name="new_option_text" placeholder="Yangi variant matni" class="w-full border p-2.5 rounded-xl text-sm bg-white"></div>
-<input name="correct_text_answers" value="{{ question.correct_text_answers }}" placeholder="Ochiq savol javoblari (vergul bilan)" class="w-full border p-3 rounded-xl text-sm">
-<input name="teacher_comment" placeholder="Ustozning o'quvchiga izohi" class="w-full border p-3 rounded-xl text-sm">
-<div class="flex gap-3"><button name="action" value="resolve" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm">Saqlash va Ballarni Hisoblash</button><button name="action" value="reject" class="bg-slate-600 hover:bg-slate-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm">Rad etish</button></div></form>{% endblock %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shikoyatni Ko'rib Chiqish | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
+  <div class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
+    <div class="flex justify-between items-center border-b pb-4 border-slate-100">
+      <h1 class="text-2xl font-bold text-slate-900">Shikoyat Tafsilotlari</h1>
+      <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">Jarayonda</span>
+    </div>
+    
+    <div class="space-y-4">
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <p class="text-xs text-slate-500">Yuboruvchi o'quvchi</p>
+        <p class="font-semibold text-slate-900">Jasur Rahimov (9-A sinf)</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Mavzu / Savol ID</label>
+        <p class="text-slate-800 font-medium">Matematika testidagi 12-savol xato tuzilgan</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Shikoyat Matni</label>
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 text-sm">
+          Salom, 12-savolda berilgan javoblar orasida to'g'ri variant berilmagan. Iltimos, buni ko'rib chiqsangiz.
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">O'qituvchi Javobi</label>
+        <textarea class="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm focus:outline-none focus:border-blue-600 focus:bg-white" rows="4" placeholder="Javobingizni yozing..."></textarea>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+      <a href="/teacher_complaints.html" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm">Orqaga</a>
+      <button class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md">Javobni Yuborish</button>
+    </div>
+  </div>
+</body>
+</html>
