@@ -42,40 +42,46 @@ def signup_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     if request.method == 'POST':
-        role = request.POST.get('role', 'student')
-        fn = request.POST.get('full_name', '').strip()
-        subject = request.POST.get('subject', '').strip()
-        cloud_bucket = request.POST.get('google_cloud_bucket', '').strip()
+        role = request.POST.get('role', 'STUDENT').upper()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        full_name = f"{first_name} {last_name}".strip()
+        email = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '').strip()
 
-        # 3-talab: Ustoz ro'yxatdan o'tayotganda ma'lumotlar to'ldirilgach faqat Google akkaunt orqali kiradi
-        if role == 'teacher':
-            if not fn:
-                messages.error(request, "Ism va familiyangizni kiriting!")
+        # Ustozlar uchun ro'yxatdan o'tish
+        if role == 'TEACHER':
+            if not email:
+                messages.error(request, "Email kiritilishi shart!")
                 return render(request, 'accounts/signup.html')
             request.session['pending_teacher_signup'] = {
-                'full_name': fn,
-                'subject': subject,
-                'google_cloud_bucket': cloud_bucket,
+                'full_name': full_name,
+                'email': email,
             }
             return redirect('google_login')
 
-        # O'quvchilar uchun odatiy ro'yxatdan o'tish
-        un = request.POST.get('username', '').strip()
-        pw = request.POST.get('password', '').strip()
-        if not un or not pw:
-            messages.error(request, "O'quvchi uchun login va parol kiritilishi shart!")
+        # O'quvchilar uchun ro'yxatdan o'tish
+        student_class = request.POST.get('student_class', 'barcha')
+        class_letter = request.POST.get('class_letter', 'barchasi')
+
+        if not email or not password:
+            messages.error(request, "Email va parol kiritilishi shart!")
             return render(request, 'accounts/signup.html')
-        if not User.objects.filter(username=un).exists():
+
+        if not User.objects.filter(username=email).exists() and not User.objects.filter(email=email).exists():
             u = User.objects.create_user(
-                username=un, password=pw, full_name=fn,
-                role='student', grade=request.POST.get('grade', 'barcha'),
-                letter=request.POST.get('letter', 'barchasi')
+                username=email,
+                email=email,
+                password=password,
+                full_name=full_name,
+                role='student',
+                grade=student_class,
+                letter=class_letter
             )
             login(request, u)
             return redirect('dashboard')
-        messages.error(request, "Bu login band!")
+        messages.error(request, "Bu email allaqachon ro'yxatdan o'tgan!")
     return render(request, 'accounts/signup.html')
-
 def google_login_start(request):
     """Ustozlarni Google OAuth 2.0 sahifasiga yo'naltiradi."""
     if settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET:

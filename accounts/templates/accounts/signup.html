@@ -28,8 +28,20 @@
         <p class="text-sm text-slate-500">Yangi hisob yarating — bir daqiqa vaqt oladi</p>
       </div>
 
+      <!-- Xatolik xabarlarini chiqarish uchun -->
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="p-3 rounded-xl bg-red-100 text-red-700 text-sm font-medium border border-red-200">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <form action="{% url 'signup' %}" method="POST" class="space-y-4">
         {% csrf_token %}
+        
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1 text-slate-700">Ism</label>
@@ -55,11 +67,11 @@
           <label class="block text-sm font-medium mb-2 text-slate-700">Siz kimsiz?</label>
           <div class="grid grid-cols-2 gap-3">
             <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition">
-              <input type="radio" name="role" value="STUDENT" id="role-student" onchange="toggleStudentFields(true)" class="text-blue-600 focus:ring-blue-500" required>
+              <input type="radio" name="role" value="STUDENT" onchange="toggleStudentFields(true)" class="text-blue-600 focus:ring-blue-500" required>
               <span class="text-sm font-medium text-slate-800">O'quvchi</span>
             </label>
             <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-300 bg-slate-50 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition">
-              <input type="radio" name="role" value="TEACHER" id="role-teacher" onchange="toggleStudentFields(false)" class="text-blue-600 focus:ring-blue-500" required>
+              <input type="radio" name="role" value="TEACHER" onchange="toggleStudentFields(false)" class="text-blue-600 focus:ring-blue-500" required>
               <span class="text-sm font-medium text-slate-800">O'qituvchi</span>
             </label>
           </div>
