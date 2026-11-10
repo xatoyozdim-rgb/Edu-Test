@@ -27,7 +27,8 @@
         <p class="text-sm text-slate-500">Yangi hisob yarating — bir daqiqa vaqt oladi</p>
       </div>
 
-      <form action="/register" method="POST" class="space-y-4">
+      <form action="{% url 'signup' %}" method="POST" class="space-y-4">
+        {% csrf_token %}
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1 text-slate-700">Ism</label>
