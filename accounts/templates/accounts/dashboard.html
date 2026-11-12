@@ -4,86 +4,114 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard | EduTest</title>
+  {% load static %}
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
   <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
-    <a href="/dashboard.html" class="flex items-center gap-3">
-      <img src="/assets/logo4-BS7ymqtK.png" alt="EduTest" class="w-9 h-9">
-      <span class="text-xl font-bold text-blue-600">EduTest Dashboard</span>
-    </a>
-    <div class="flex items-center gap-4">
-      <a href="/profile.html" class="text-sm font-medium text-slate-700 hover:text-blue-600">Profil</a>
-      <a href="/login.html" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
-    </div>
-  </nav>
+  <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+    <img src="{% static 'assets/logo4-BS7ymqtK.png' %}" alt="EduTest" class="w-9 h-9">
+    <span class="text-xl font-bold text-blue-600">EduTest</span>
+  </a>
+{% if user.is_superuser %}
+  <a href="{% url 'admin_panel' %}" class="text-sm font-medium text-purple-600 hover:text-purple-800 font-bold">👑 Admin</a>
+{% endif %}
+  <div class="flex items-center gap-4">
+    <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+    {% if is_teacher %}
+      <a href="{% url 'teacher_tests' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Mening Testlarim</a>
+    {% endif %}
+    <a href="{% url 'profile' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Profil</a>
+    <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+  </div>
+</nav>
 
   <main class="max-w-7xl mx-auto w-full p-6 space-y-8 flex-grow">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">📊</div>
-        <div>
-          <p class="text-sm text-slate-500">Jami Testlar</p>
-          <h3 class="text-2xl font-bold text-slate-900">24</h3>
-        </div>
+{% if is_teacher and not user.is_approved %}
+<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
+  ⚠️ Hisobingiz hali <b>admin tasdiqlashini kutilmoqda</b>. Tasdiqlangach barcha funksiyalar ochiladi.
+</div>
+{% endif %}
+  <!-- STATISTIKA -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl">📊</div>
+      <div>
+        <p class="text-sm text-slate-500">{% if is_teacher %}Mening Testlarim{% else %}Mavjud Testlar{% endif %}</p>
+        <h3 class="text-2xl font-bold text-slate-900">{{ total_tests }}</h3>
       </div>
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-xl">👥</div>
-        <div>
-          <p class="text-sm text-slate-500">Faol O'quvchilar</p>
-          <h3 class="text-2xl font-bold text-slate-900">142</h3>
-        </div>
+    </div>
+    <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold text-xl">👥</div>
+      <div>
+        <p class="text-sm text-slate-500">Faol O'quvchilar</p>
+        <h3 class="text-2xl font-bold text-slate-900">{{ active_students }}</h3>
       </div>
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">✅</div>
-        <div>
-          <p class="text-sm text-slate-500">Bajarilgan Testlar</p>
-          <h3 class="text-2xl font-bold text-slate-900">1,280</h3>
-        </div>
+    </div>
+    <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xl">✅</div>
+      <div>
+        <p class="text-sm text-slate-500">{% if is_teacher %}Bajarilgan Testlar{% else %}Mening Urinishlarim{% endif %}</p>
+        <h3 class="text-2xl font-bold text-slate-900">{% if is_teacher %}{{ completed_tests }}{% else %}{{ my_attempts }}{% endif %}</h3>
       </div>
-      <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl">⭐</div>
-        <div>
-          <p class="text-sm text-slate-500">O'rtacha Ball</p>
-          <h3 class="text-2xl font-bold text-slate-900">84.5%</h3>
+    </div>
+    <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl">⭐</div>
+      <div>
+        <p class="text-sm text-slate-500">O'rtacha Ball</p>
+        <h3 class="text-2xl font-bold text-slate-900">{{ average_score }}%</h3>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- TESTLAR -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-bold text-slate-900">
+          {% if is_teacher %}So'nggi Yaratilgan Testlar{% else %}Mavjud Testlar{% endif %}
+        </h2>
+        {% if is_teacher %}
+          <a href="{% url 'test_create' %}" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition">+ Yangi Test</a>
+        {% endif %}
+      </div>
+      <div class="space-y-4">
+        {% for test in recent_tests %}
+        <div class="p-4 rounded-xl border border-slate-100 bg-slate-50 flex justify-between items-center">
+          <div>
+            <h4 class="font-semibold text-slate-900">{{ test.title }}</h4>
+            <p class="text-xs text-slate-500">{{ test.questions.count }} savol · {{ test.duration_minutes }} daqiqa · {{ test.subject }}</p>
+          </div>
+          <a href="{% url 'test_view' test.id %}" class="text-sm text-blue-600 font-medium hover:underline">
+  {% if is_teacher %}Ko'rish{% else %}
+    {% if test.test_type == 'practice' %}Boshlash / Yana urinish{% else %}Topshirish{% endif %}
+  {% endif %}
+</a>
         </div>
+        {% empty %}
+        <p class="text-sm text-slate-500">Hozircha testlar yo'q.</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="text-lg font-bold text-slate-900">So'nggi Yaratilgan Testlar</h2>
-          <a href="/test_form.html" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition">+ Yangi Test</a>
-        </div>
-        <div class="space-y-4">
-          <div class="p-4 rounded-xl border border-slate-100 bg-slate-50 flex justify-between items-center">
-            <div>
-              <h4 class="font-semibold text-slate-900">Matematika 9-sinf Choraklik</h4>
-              <p class="text-xs text-slate-500">25 savol · 45 daqiqa</p>
-            </div>
-            <a href="/take_test.html" class="text-sm text-blue-600 font-medium hover:underline">Ko'rish</a>
-          </div>
-          <div class="p-4 rounded-xl border border-slate-100 bg-slate-50 flex justify-between items-center">
-            <div>
-              <h4 class="font-semibold text-slate-900">Fizika 10-sinf Mexanika</h4>
-              <p class="text-xs text-slate-500">20 savol · 30 daqiqa</p>
-            </div>
-            <a href="/take_test.html" class="text-sm text-blue-600 font-medium hover:underline">Ko'rish</a>
-          </div>
-        </div>
-      </div>
+    <!-- TEZKOR HAVOLALAR — ROLE BO'YICHA -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Tezkor Havolalar</h2>
+      <div class="space-y-3">
+        <a href="{% url 'student_rankings' %}" class="block p-3 rounded-xl bg-sky-50 text-sky-800 font-medium text-sm hover:bg-sky-100 transition">🏆 O'quvchilar Reytingi</a>
+        <a href="{% url 'teacher_rankings' %}" class="block p-3 rounded-xl bg-purple-50 text-purple-800 font-medium text-sm hover:bg-purple-100 transition">🎓 O'qituvchilar Reytingi</a>
 
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-        <h2 class="text-lg font-bold text-slate-900 mb-4">Tezkor Havolalar</h2>
-        <div class="space-y-3">
-          <a href="/student_rankings.html" class="block p-3 rounded-xl bg-sky-50 text-sky-800 font-medium text-sm hover:bg-sky-100 transition">🏆 O'quvchilar Reytingi</a>
-          <a href="/students_list.html" class="block p-3 rounded-xl bg-blue-50 text-blue-800 font-medium text-sm hover:bg-blue-100 transition">👨‍🎓 O'quvchilar Ro'yxati</a>
-          <a href="/teacher_complaints.html" class="block p-3 rounded-xl bg-amber-50 text-amber-800 font-medium text-sm hover:bg-amber-100 transition">⚠️ Shikoyatlar va Takliflar</a>
-          <a href="/monitor.html" class="block p-3 rounded-xl bg-indigo-50 text-indigo-800 font-medium text-sm hover:bg-indigo-100 transition">🖥️ Jonli Monitoring</a>
-        </div>
+        {% if is_teacher %}
+          <a href="{% url 'teacher_tests' %}" class="block p-3 rounded-xl bg-blue-50 text-blue-800 font-medium text-sm hover:bg-blue-100 transition">📝 Mening Testlarim</a>
+          <a href="{% url 'users_list' %}" class="block p-3 rounded-xl bg-emerald-50 text-emerald-800 font-medium text-sm hover:bg-emerald-100 transition">👥 Foydalanuvchilar</a>
+          <a href="{% url 'teacher_complaints' %}" class="block p-3 rounded-xl bg-amber-50 text-amber-800 font-medium text-sm hover:bg-amber-100 transition">⚠️ Shikoyatlar</a>
+          <a href="{% url 'monitor_list' %}" class="block p-3 rounded-xl bg-indigo-50 text-indigo-800 font-medium text-sm hover:bg-indigo-100 transition">🖥️ Jonli Monitoring</a>
+        {% else %}
+          <a href="{% url 'student_results' %}" class="block p-3 rounded-xl bg-emerald-50 text-emerald-800 font-medium text-sm hover:bg-emerald-100 transition">📊 Mening Natijalarim</a>
+        {% endif %}
       </div>
     </div>
-  </main>
+  </div>
+</main>
 </body>
 </html>

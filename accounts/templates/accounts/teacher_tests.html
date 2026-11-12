@@ -1,32 +1,122 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O'qituvchi Testlari | EduTest</title>
+  <title>Mening Testlarim | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
-  <div class="max-w-6xl mx-auto space-y-6">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <img src="{% static 'assets/logo4-BS7ymqtK.png' %}" alt="EduTest" class="w-9 h-9">
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+      <a href="{% url 'profile' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Profil</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto w-full p-6 space-y-6 flex-grow">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-slate-900">Mening Testlarim</h1>
-      <a href="/test_form.html" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">+ Yangi Test Yaratish</a>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Mening Testlarim</h1>
+        <p class="text-sm text-slate-500 mt-1">Jami: {{ tests|length }} ta test</p>
+      </div>
+      <a href="{% url 'test_create' %}" class="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">+ Yangi Test Yaratish</a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      {% for test in tests %}
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col">
+
         <div class="flex justify-between items-start">
-          <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Matematika</span>
-          <span class="text-xs text-slate-400">25 savol</span>
+          <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+            {{ test.subject }}
+          </span>
+
+          {% if test.status == 'published' %}
+            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">Faol</span>
+          {% elif test.status == 'closed' %}
+            <span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold">Yopilgan</span>
+          {% else %}
+            <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">Qoralama</span>
+          {% endif %}
         </div>
-        <h3 class="font-bold text-lg text-slate-900">9-sinf Choraklik Test</h3>
-        <p class="text-xs text-slate-500">Vaqt chegarasi: 45 daqiqa</p>
-        <div class="flex gap-2 pt-2 border-t border-slate-100">
-          <a href="/take_test.html" class="w-1/2 py-2 text-center bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200">Sinab ko'rish</a>
-          <a href="/test_form.html" class="w-1/2 py-2 text-center bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold hover:bg-blue-100">Tahrirlash</a>
+
+        <div class="flex-grow">
+          <h3 class="font-bold text-lg text-slate-900">{{ test.title }}</h3>
+          <p class="text-xs text-slate-500 mt-1">
+            {{ test.questions.count }} savol · {{ test.duration_minutes }} daqiqa
+          </p>
+          <p class="text-xs text-slate-400 mt-1">
+            {{ test.get_test_type_display }} · {{ test.target_grade }}-sinf {{ test.target_letter }}
+          </p>
+          <p class="text-xs text-slate-400 mt-1">
+            Yaratilgan: {{ test.created_at|date:"d.m.Y H:i" }}
+          </p>
         </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+          <a href="{% url 'test_view' test.id %}"
+             class="py-2 text-center bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200">
+            Sinab ko'rish
+          </a>
+          <a href="{% url 'test_edit' test.id %}"
+             class="py-2 text-center bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold hover:bg-blue-100">
+            Tahrirlash
+          </a>
+          <a href="{% url 'monitor_students' test.id %}"
+             class="py-2 text-center bg-indigo-50 text-indigo-600 rounded-xl text-xs font-semibold hover:bg-indigo-100">
+            🖥️ Monitor
+          </a>
+          <a href="{% url 'test_export_txt' test.id %}"
+   class="py-2 text-center bg-amber-50 text-amber-700 rounded-xl text-xs font-semibold hover:bg-amber-100">
+  ⬇️ Matnga eksport
+</a>
+<a href="{% url 'export_results_excel' test.id %}"
+   class="py-2 text-center bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold hover:bg-emerald-100">
+  📊 Excel natijalar
+</a>
+        </div>
+
+        {% if test.status != 'closed' %}
+        <form method="post" action="{% url 'test_close' test.id %}" onsubmit="return confirm('Testni yopishni tasdiqlaysizmi?');">
+          {% csrf_token %}
+          <button type="submit" class="w-full py-2 text-center bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 transition">
+            Testni yopish
+          </button>
+        </form>
+        {% endif %}
+
       </div>
+      {% empty %}
+      <div class="col-span-full p-12 rounded-2xl bg-white border border-slate-200 text-center">
+        <div class="text-5xl mb-4">📝</div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2">Hozircha testlar yo'q</h3>
+        <p class="text-sm text-slate-500 mb-4">Birinchi testingizni yaratib boshlang</p>
+        <a href="{% url 'test_create' %}" class="inline-block px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition">
+          + Yangi Test Yaratish
+        </a>
+      </div>
+      {% endfor %}
     </div>
-  </div>
+
+  </main>
 </body>
 </html>

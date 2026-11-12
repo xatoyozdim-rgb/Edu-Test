@@ -1,57 +1,102 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O'quvchilar Reytingi | EduTest</title>
+  <title>O'qituvchilar Reytingi | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .rank-gold { background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%); animation: goldPulse 2s ease-in-out infinite; }
+    .rank-silver { background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%); box-shadow: 0 0 10px rgba(148,163,184,0.4); }
+    .rank-green { background: rgba(16, 185, 129, 0.12); }
+    .rank-blue { background: rgba(59, 130, 246, 0.12); }
+    .rank-yellow { background: rgba(234, 179, 8, 0.12); }
+    @keyframes goldPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(251, 191, 36, 0.5); }
+      50% { box-shadow: 0 0 25px rgba(251, 191, 36, 0.9); }
+    }
+    .medal-circle {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%; font-weight: bold; font-size: 13px;
+    }
+    .medal-gold { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.5); }
+    .medal-silver { background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: white; box-shadow: 0 4px 12px rgba(148,163,184,0.5); }
+    .medal-green { background: linear-gradient(135deg, #34d399, #10b981); color: white; }
+    .medal-blue { background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white; }
+    .medal-yellow { background: linear-gradient(135deg, #fcd34d, #eab308); color: white; }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-  <div class="max-w-5xl mx-auto p-6 space-y-6">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-bold text-slate-900">O'quvchilar Reytingi</h1>
-        <p class="text-sm text-slate-500">Eng yuqori natija ko'rsatgan o'quvchilar ro'yxati</p>
-      </div>
-      <a href="/dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Dashboard</a>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto w-full p-6 my-8 flex-grow">
+
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-slate-900">🎓 O'qituvchilar Reytingi</h1>
+      <p class="text-sm text-slate-500 mt-1">Testlari eng ko'p ishlatilgan o'qituvchilar</p>
     </div>
 
+    {% if rankings %}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
-            <th class="p-4">O'rin</th>
-            <th class="p-4">O'quvchi</th>
-            <th class="p-4">Sinf</th>
-            <th class="p-4">Jami Ball</th>
-            <th class="p-4">Aniqlik</th>
+            <th class="p-4 w-20">O'rin</th>
+            <th class="p-4">O'qituvchi</th>
+            <th class="p-4">Fan</th>
+            <th class="p-4 text-center">Testlar</th>
+            <th class="p-4 text-right">Ishlatilgan</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100 text-sm">
-          <tr class="hover:bg-blue-50/30">
-            <td class="p-4 font-bold text-amber-500">🥇 1</td>
-            <td class="p-4 font-semibold text-slate-900">Jasur Rahimov</td>
-            <td class="p-4 text-slate-600">9-A</td>
-            <td class="p-4 font-bold text-blue-600">980 ball</td>
-            <td class="p-4 text-emerald-600 font-semibold">98%</td>
+          {% for row in rankings %}
+          <tr class="rank-{{ row.badge.cls }} hover:brightness-95 transition">
+            <td class="p-4">
+              <span class="medal-circle medal-{{ row.badge.cls }}">{{ row.badge.medal }}</span>
+            </td>
+            <td class="p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center">
+                  {{ row.obj.first_name|first|upper }}{{ row.obj.last_name|first|upper }}
+                </div>
+                <div>
+                  <p class="font-semibold text-slate-900">{{ row.obj.get_display_name|default:row.obj.username }}</p>
+                  {% if row.obj.subject %}<p class="text-xs text-slate-500">{{ row.obj.subject }}</p>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="p-4 text-slate-600">{{ row.obj.subject|default:"—" }}</td>
+            <td class="p-4 text-center font-semibold text-slate-700">{{ row.obj.total_tests }}</td>
+            <td class="p-4 text-right">
+              <span class="text-lg font-bold {% if row.badge.cls == 'gold' %}text-amber-600{% elif row.badge.cls == 'silver' %}text-slate-500{% elif row.badge.cls == 'green' %}text-emerald-600{% elif row.badge.cls == 'blue' %}text-blue-600{% else %}text-yellow-600{% endif %}">
+                {{ row.obj.total_attempts }}
+              </span>
+              <span class="text-xs text-slate-400">marta</span>
+            </td>
           </tr>
-          <tr class="hover:bg-blue-50/30">
-            <td class="p-4 font-bold text-slate-400">🥈 2</td>
-            <td class="p-4 font-semibold text-slate-900">Malika Ikromova</td>
-            <td class="p-4 text-slate-600">10-B</td>
-            <td class="p-4 font-bold text-blue-600">945 ball</td>
-            <td class="p-4 text-emerald-600 font-semibold">95%</td>
-          </tr>
-          <tr class="hover:bg-blue-50/30">
-            <td class="p-4 font-bold text-amber-700">🥉 3</td>
-            <td class="p-4 font-semibold text-slate-900">Sardor Olimov</td>
-            <td class="p-4 text-slate-600">9-A</td>
-            <td class="p-4 font-bold text-blue-600">910 ball</td>
-            <td class="p-4 text-emerald-600 font-semibold">91%</td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
-  </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+      <div class="text-6xl mb-4">🎓</div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Hozircha reyting bo'sh</h3>
+      <p class="text-sm text-slate-500">Testlar ishlatilgandan keyin reyting shakllanadi</p>
+    </div>
+    {% endif %}
+
+  </main>
 </body>
 </html>

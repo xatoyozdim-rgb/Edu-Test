@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">👑</span>
+      <span class="text-xl font-bold text-purple-600">Admin Panel</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-purple-600">Dashboard</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto w-full p-6 my-8 flex-grow space-y-6">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% elif message.tags == 'warning' %}bg-amber-100 text-amber-700 border-amber-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">Boshqaruv paneli</h1>
+      <p class="text-sm text-slate-500 mt-1">Platforma statistikasi va boshqaruv</p>
+    </div>
+
+    <!-- STATISTIKA -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">Kutilayotgan o'qituvchilar</p>
+        <p class="text-3xl font-bold {% if pending_count > 0 %}text-amber-600{% else %}text-slate-900{% endif %} mt-1">{{ pending_count }}</p>
+        {% if pending_count > 0 %}
+          <a href="{% url 'admin_teachers' %}" class="text-xs text-blue-600 hover:underline mt-1 inline-block">Ko'rib chiqish →</a>
+        {% endif %}
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">Tasdiqlangan o'qituvchilar</p>
+        <p class="text-3xl font-bold text-emerald-600 mt-1">{{ approved_teachers }}</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">O'quvchilar</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_students }}</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">Testlar</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_tests }}</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">Urinishlar</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_attempts }}</p>
+      </div>
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <p class="text-xs text-slate-500">Shikoyatlar</p>
+        <p class="text-3xl font-bold text-slate-900 mt-1">{{ total_complaints }}</p>
+      </div>
+    </div>
+
+    <!-- AMALLAR -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <a href="{% url 'admin_teachers' %}"
+         class="block p-6 rounded-2xl bg-white border-2 border-blue-200 shadow-sm hover:border-blue-400 hover:bg-blue-50/30 transition">
+        <div class="text-3xl mb-2">👨‍🏫</div>
+        <h3 class="font-bold text-lg text-slate-900">O'qituvchilarni boshqarish</h3>
+        <p class="text-sm text-slate-500 mt-1">Ro'yxatdan o'tgan o'qituvchilarni tasdiqlash yoki rad etish</p>
+        {% if pending_count > 0 %}
+          <span class="inline-block mt-3 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
+            {{ pending_count }} ta kutilmoqda
+          </span>
+        {% endif %}
+      </a>
+
+      <a href="{% url 'admin_reset_results' %}"
+         class="block p-6 rounded-2xl bg-white border-2 border-red-200 shadow-sm hover:border-red-400 hover:bg-red-50/30 transition">
+        <div class="text-3xl mb-2">🗑️</div>
+        <h3 class="font-bold text-lg text-slate-900">Natijalarni tozalash</h3>
+        <p class="text-sm text-slate-500 mt-1">Barcha urinishlar va reytingni o'chirish. Testlar saqlanadi.</p>
+        <span class="inline-block mt-3 px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+          ⚠️ Ehtiyotkorlik bilan
+        </span>
+      </a>
+
+    </div>
+
+  </main>
+</body>
+</html>

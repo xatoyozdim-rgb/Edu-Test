@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monitoring | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">← Dashboard</a>
+  </nav>
+
+  <main class="max-w-5xl mx-auto w-full p-6 space-y-6">
+    <h1 class="text-2xl font-bold text-slate-900">🖥️ Jonli Monitoring</h1>
+    <p class="text-sm text-slate-500">Kuzatish uchun testni tanlang</p>
+
+    <div class="space-y-3">
+      {% for test in tests %}
+      <div class="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex justify-between items-center">
+        <div>
+          <h3 class="font-semibold text-slate-900">{{ test.title }}</h3>
+          <p class="text-xs text-slate-500">
+            {{ test.subject }} · {{ test.questions.count }} savol · {{ test.duration_minutes }} daqiqa ·
+            Holat: <span class="font-medium">{{ test.get_status_display }}</span>
+          </p>
+        </div>
+        <a href="{% url 'monitor_students' test.id %}"
+           class="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition">
+          Monitor qilish
+        </a>
+      </div>
+      {% empty %}
+      <div class="p-8 rounded-2xl bg-white border border-slate-200 text-center">
+        <p class="text-sm text-slate-500">Hozircha monitoring uchun testlar yo'q.</p>
+        <a href="{% url 'test_create' %}" class="inline-block mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl">
+          + Yangi Test yaratish
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </main>
+</body>
+</html>

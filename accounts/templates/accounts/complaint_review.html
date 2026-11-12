@@ -1,43 +1,176 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shikoyatni Ko'rib Chiqish | EduTest</title>
+  <title>Shikoyat #{{ complaint.id }} | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
-  <div class="max-w-3xl mx-auto bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
-    <div class="flex justify-between items-center border-b pb-4 border-slate-100">
-      <h1 class="text-2xl font-bold text-slate-900">Shikoyat Tafsilotlari</h1>
-      <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">Jarayonda</span>
-    </div>
-    
-    <div class="space-y-4">
-      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-        <p class="text-xs text-slate-500">Yuboruvchi o'quvchi</p>
-        <p class="font-semibold text-slate-900">Jasur Rahimov (9-A sinf)</p>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <a href="{% url 'teacher_complaints' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">← Shikoyatlar</a>
+  </nav>
+
+  <main class="max-w-3xl mx-auto w-full p-6 my-8 flex-grow space-y-6">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- HEADER -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">Shikoyat #{{ complaint.id }}</h1>
+        <p class="text-sm text-slate-500 mt-1">{{ complaint.created_at|date:"d.m.Y H:i" }}</p>
       </div>
       <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Mavzu / Savol ID</label>
-        <p class="text-slate-800 font-medium">Matematika testidagi 12-savol xato tuzilgan</p>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">Shikoyat Matni</label>
-        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 text-sm">
-          Salom, 12-savolda berilgan javoblar orasida to'g'ri variant berilmagan. Iltimos, buni ko'rib chiqsangiz.
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-slate-700 mb-1">O'qituvchi Javobi</label>
-        <textarea class="w-full rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm focus:outline-none focus:border-blue-600 focus:bg-white" rows="4" placeholder="Javobingizni yozing..."></textarea>
+        {% if complaint.status == 'pending' %}
+          <span class="px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">⏳ Jarayonda</span>
+        {% elif complaint.status == 'reviewed' %}
+          <span class="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">👀 Ko'rilgan</span>
+        {% elif complaint.status == 'resolved' %}
+          <span class="px-3 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">✅ Hal qilingan</span>
+        {% elif complaint.status == 'rejected' %}
+          <span class="px-3 py-1.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Rad etilgan</span>
+        {% endif %}
       </div>
     </div>
 
-    <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-      <a href="/teacher_complaints.html" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm">Orqaga</a>
-      <button class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md">Javobni Yuborish</button>
+    <!-- YUBORUVCHI -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-2">
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider mb-3">👤 Yuboruvchi</h2>
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">
+          {{ complaint.student.first_name|first|upper }}{{ complaint.student.last_name|first|upper }}
+        </div>
+        <div>
+          <p class="font-semibold text-slate-900">
+            {{ complaint.student.get_display_name|default:complaint.student.username|default:"Noma'lum" }}
+          </p>
+          <p class="text-xs text-slate-500">
+            {% if complaint.student.grade and complaint.student.grade != 'barcha' %}
+              {{ complaint.student.grade }}-sinf {{ complaint.student.letter }}
+            {% else %}
+              Sinf ko'rsatilmagan
+            {% endif %}
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
+
+    <!-- TEST VA SAVOL -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">📝 Test va Savol</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">Test nomi</p>
+          <p class="font-semibold text-slate-900 mt-1">{{ complaint.question.test.title }}</p>
+        </div>
+        <div class="p-3 bg-slate-50 rounded-xl">
+          <p class="text-xs text-slate-500">Fan</p>
+          <p class="font-semibold text-slate-900 mt-1">{{ complaint.question.test.subject }}</p>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <p class="text-xs text-slate-500 mb-2">
+          Savol #{{ complaint.question.order }}
+          · {{ complaint.question.get_question_type_display }}
+          · {{ complaint.question.points }} ball
+        </p>
+        <p class="font-semibold text-slate-900 mb-3">{{ complaint.question.text }}</p>
+
+        {% if complaint.question.question_type == 'open' %}
+          <div class="text-sm text-slate-600">
+            <p class="text-xs text-slate-500 mb-2">Qabul qilinadigan javoblar:</p>
+            {% if valid_answers %}
+              <div class="flex flex-wrap gap-1">
+                {% for v in valid_answers %}
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">{{ v }}</span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <p class="text-xs text-slate-400 italic">Javoblar belgilanmagan</p>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="space-y-2">
+            {% for opt in complaint.question.options.all %}
+            <div class="flex items-center gap-2 p-2 rounded-lg
+              {% if opt.is_correct %}bg-emerald-50 border border-emerald-200{% else %}bg-white border border-slate-200{% endif %}">
+              {% if opt.is_correct %}
+                <span class="text-emerald-600 font-bold">✓</span>
+              {% else %}
+                <span class="text-slate-300">○</span>
+              {% endif %}
+              <span class="text-sm {% if opt.is_correct %}font-semibold text-emerald-800{% else %}text-slate-700{% endif %}">
+                {{ opt.text }}
+              </span>
+            </div>
+            {% empty %}
+              <p class="text-xs text-slate-400 italic">Variantlar yo'q</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- SHIKOYAT SABABI -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider mb-3">💬 Shikoyat sababi</h2>
+      <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 text-sm text-slate-800 whitespace-pre-wrap">{{ complaint.reason|default:"(bo'sh)" }}</div>
+    </div>
+
+    <!-- JAVOB FORMASI -->
+    <form method="post" action="{% url 'review_complaint' complaint.id %}"
+          class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+      {% csrf_token %}
+
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">✍️ Javob</h2>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Holat</label>
+        <select name="status"
+                class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+          <option value="pending" {% if complaint.status == 'pending' %}selected{% endif %}>⏳ Jarayonda</option>
+          <option value="reviewed" {% if complaint.status == 'reviewed' %}selected{% endif %}>👀 Ko'rilgan</option>
+          <option value="resolved" {% if complaint.status == 'resolved' %}selected{% endif %}>✅ Hal qilingan</option>
+          <option value="rejected" {% if complaint.status == 'rejected' %}selected{% endif %}>❌ Rad etilgan</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">Javobingiz</label>
+        <textarea name="teacher_comment" rows="5"
+                  class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white"
+                  placeholder="Shikoyat bo'yicha javobingiz...">{{ complaint.teacher_comment|default:"" }}</textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <a href="{% url 'teacher_complaints' %}"
+           class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm">
+          Orqaga
+        </a>
+        <button type="submit"
+                class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md">
+          Saqlash
+        </button>
+      </div>
+    </form>
+
+  </main>
 </body>
 </html>

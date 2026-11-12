@@ -16,7 +16,7 @@
     </div>
     <div class="relative max-w-md space-y-4">
       <h2 class="text-3xl font-bold leading-tight">Bilim olamini birga kashf etamiz</h2>
-      <p class="text-sky-100 text-sm leading-relaxed">O'quvchi yoki o'qituvchi sifatida ro'yxatdan o'ting va zamonaviy ta'lim imkoniyatlaridan foydalaning.</p>
+      <p class="text-sky-100 text-sm leading-relaxed">O'quvchi yoki o'qituvchi sifatida ro'yxatdan o'ting.</p>
     </div>
     <div class="relative text-xs text-sky-200">© 2026 EduTest</div>
   </aside>
@@ -25,10 +25,9 @@
     <div class="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-xl">
       <div class="text-center mb-6">
         <h1 class="text-2xl font-bold mb-1 text-slate-900">Ro'yxatdan o'tish</h1>
-        <p class="text-sm text-slate-500">Yangi hisob yarating — bir daqiqa vaqt oladi</p>
+        <p class="text-sm text-slate-500">Yangi hisob yarating</p>
       </div>
 
-      <!-- Xatolik xabarlarini chiqarish uchun -->
       {% if messages %}
         <div class="mb-4 space-y-2">
           {% for message in messages %}
@@ -41,7 +40,7 @@
 
       <form action="{% url 'signup' %}" method="POST" class="space-y-4">
         {% csrf_token %}
-        
+
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1 text-slate-700">Ism</label>
@@ -58,9 +57,16 @@
           <input type="email" name="email" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="email@misol.uz">
         </div>
 
+        <!-- YANGI: Login maydoni -->
+        <div>
+          <label class="block text-sm font-medium mb-1 text-slate-700">Login (username)</label>
+          <input type="text" name="username" required minlength="3" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Masalan: ali_2026">
+          <p class="text-xs text-slate-500 mt-1">Kamida 3 ta belgi. Lotin harflari, raqam, _ bo'lishi mumkin.</p>
+        </div>
+
         <div>
           <label class="block text-sm font-medium mb-1 text-slate-700">Parol</label>
-          <input type="password" name="password" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Yangi parol yaratish">
+          <input type="password" name="password" required minlength="6" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition" placeholder="Kamida 6 ta belgi">
         </div>
 
         <div>

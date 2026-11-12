@@ -1,37 +1,175 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jonli Monitoring | EduTest</title>
+  <title>Monitor: {{ test.title }} | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
-  <div class="max-w-6xl mx-auto space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-slate-900">Jonli Test Monitoringi</h1>
-      <a href="/dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Dashboard</a>
-    </div>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
 
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-      <p class="text-sm text-slate-500">Ayni vaqtda online test topshirayotgan o'quvchilar</p>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
-          <div>
-            <h4 class="font-bold text-slate-900">Aliyev Vali</h4>
-            <p class="text-xs text-slate-500">Matematika · 12/20 savol</p>
-          </div>
-          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-        </div>
-        <div class="p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex items-center justify-between">
-          <div>
-            <h4 class="font-bold text-slate-900">Samiroat Zokirova</h4>
-            <p class="text-xs text-slate-500">Fizika · 18/20 savol</p>
-          </div>
-          <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
-        </div>
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'teacher_tests' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">← Testlarim</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto w-full p-6 space-y-6 flex-grow">
+
+    <div class="flex justify-between items-start flex-wrap gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">🖥️ Monitoring</h1>
+        <p class="text-sm text-slate-500 mt-1">
+          <span class="font-semibold text-slate-700">{{ test.title }}</span>
+          · {{ test.subject }} · {{ test.duration_minutes }} daqiqa
+        </p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'export_results_excel' test.id %}"
+           class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl">
+          📊 Excel yuklab olish
+        </a>
       </div>
     </div>
-  </div>
+
+    {% if students_data %}
+    <div class="space-y-4">
+      {% for sd in students_data %}
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
+        <!-- O'QUVCHI HEADER -->
+        <div class="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
+          <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
+            {{ sd.student.first_name|first|upper }}{{ sd.student.last_name|first|upper }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold text-slate-900 truncate">
+              {{ sd.student.get_display_name|default:sd.student.username }}
+            </p>
+            <p class="text-xs text-slate-500">
+              {% if sd.student.grade != 'barcha' %}{{ sd.student.grade }}-sinf {{ sd.student.letter }}{% endif %}
+              · Jami urinishlar: <b>{{ sd.total_attempts }}</b>
+            </p>
+          </div>
+        </div>
+
+        <!-- ATTEMPTLAR RO'YXATI -->
+        <div class="space-y-3">
+          {% for item in sd.attempts %}
+          {% with attempt=item.att delta=item.delta %}
+          <div class="p-4 rounded-xl border
+            {% if attempt.is_stale %}border-red-200 bg-red-50/40
+            {% elif attempt.status == 'completed' %}border-emerald-200 bg-emerald-50/40
+            {% elif attempt.status == 'in_progress' %}border-amber-200 bg-amber-50/40
+            {% else %}border-slate-200 bg-slate-50{% endif %}">
+
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+              <!-- CHAP: urinish raqami, sana, status -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-1">
+                  <span class="font-bold text-sm text-slate-900">Urinish #{{ attempt.attempt_number }}</span>
+
+                  {% if attempt.status == 'in_progress' %}
+                    <span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">⏳ Ishlanmoqda</span>
+                  {% elif attempt.status == 'completed' %}
+                    {% if attempt.is_stale %}
+                      <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">🔄 Qayta topshirish</span>
+                    {% else %}
+                      <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">✅ Yakunlangan</span>
+                    {% endif %}
+                  {% elif attempt.status == 'disqualified' %}
+                    <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Chetlatilgan</span>
+                  {% elif attempt.status == 'blocked' %}
+                    <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">🚫 Bloklangan</span>
+                  {% endif %}
+
+                  {% if attempt.violation_count > 0 %}
+                    <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">⚠️ {{ attempt.violation_count }}</span>
+                  {% endif %}
+                </div>
+                <p class="text-xs text-slate-500">
+                  {{ attempt.started_at|date:"d.m.Y H:i" }}
+                  {% if attempt.finished_at %} → {{ attempt.finished_at|date:"H:i" }}{% endif %}
+                </p>
+              </div>
+
+              <!-- O'NG: ball, foiz, delta -->
+              {% if attempt.status == 'completed' %}
+              <div class="flex items-center gap-4 flex-wrap">
+
+                <div class="text-center">
+                  <p class="text-xs text-slate-500 mb-0.5">To'g'ri</p>
+                  <p class="font-semibold text-slate-700">{{ attempt.correct_count }}/{{ attempt.total_questions }}</p>
+                </div>
+
+                {% if attempt.total_points %}
+                <div class="text-center">
+                  <p class="text-xs text-slate-500 mb-0.5">Ball</p>
+                  <p class="font-semibold text-amber-600">
+                    {{ attempt.earned_points|floatformat:1 }}/{{ attempt.total_points|floatformat:1 }}
+                  </p>
+                </div>
+                {% endif %}
+
+                <div class="text-center">
+                  <p class="text-xs text-slate-500 mb-0.5">Foiz</p>
+                  <p class="text-2xl font-bold
+                    {% if attempt.score >= 80 %}text-emerald-600
+                    {% elif attempt.score >= 60 %}text-amber-600
+                    {% else %}text-red-600{% endif %}">
+                    {{ attempt.score }}%
+                  </p>
+                </div>
+
+                {% if delta is not None %}
+                <div class="text-center min-w-[70px]">
+                  <p class="text-xs text-slate-500 mb-0.5">O'zgarish</p>
+                  {% if delta > 0 %}
+                    <span class="text-emerald-600 font-bold text-sm">⬆️ +{{ delta }}%</span>
+                  {% elif delta < 0 %}
+                    <span class="text-red-600 font-bold text-sm">⬇️ {{ delta }}%</span>
+                  {% else %}
+                    <span class="text-slate-500 font-bold text-sm">➡️ 0%</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+              </div>
+              {% elif attempt.status == 'in_progress' %}
+              <div class="text-right">
+                <span class="text-amber-600 font-semibold text-sm">⏱️ Davom etmoqda</span>
+              </div>
+              {% endif %}
+
+            </div>
+          </div>
+          {% endwith %}
+          {% endfor %}
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Hozircha urinishlar yo'q</h3>
+      <p class="text-sm text-slate-500">Bu testni hali hech kim topshirmagan</p>
+    </div>
+    {% endif %}
+
+  </main>
+
+  <script>
+    // Har 20 sekundda avtomatik yangilanish
+    setTimeout(() => location.reload(), 20000);
+  </script>
 </body>
 </html>

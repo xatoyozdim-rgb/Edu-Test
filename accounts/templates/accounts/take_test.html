@@ -1,52 +1,556 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Yechish | EduTest</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>{{ test.title }} | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
-  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
-    <span class="text-lg font-bold text-blue-600">EduTest · Test Sinov</span>
-    <div class="px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm border border-blue-200">
-      ⏱️ Vaqt: <span id="timer">44:59</span>
+
+  <!-- ============ FULLSCREEN OVERLAY (exam uchun) ============ -->
+  {% if attempt and is_exam %}
+  <div id="fs-overlay" class="fixed inset-0 bg-slate-900/95 z-50 flex items-center justify-center p-6">
+    <div class="text-center text-white max-w-md space-y-6">
+      <div class="text-7xl">🔒</div>
+      <h2 class="text-2xl font-bold">Fullscreen rejimi talab qilinadi</h2>
+      <p class="text-slate-300 text-sm leading-relaxed">
+        Bu — nazorat ishi. Testni boshlash uchun to'liq ekran rejimiga o'ting.
+        Test davomida fullscreen dan chiqsangiz — qoidabuzarlik qayd etiladi.
+      </p>
+      <button type="button" onclick="enterFullscreenAndStart()"
+              class="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg">
+        Fullscreen rejimiga kirish
+      </button>
+      <p id="fs-error" class="text-red-300 text-xs hidden"></p>
     </div>
+  </div>
+  {% endif %}
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="text-lg font-bold text-blue-600">{{ test.title }}</a>
+    {% if attempt %}
+    <div class="flex items-center gap-3">
+      {% if is_exam %}
+        <div id="fs-status"
+             class="px-3 py-1.5 rounded-full bg-red-50 text-red-700 font-semibold text-xs border border-red-200">
+          ⚠️ Fullscreen yo'q
+        </div>
+      {% endif %}
+      <div class="px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm border border-blue-200">
+        ⏱️ <span id="timer">--:--</span>
+      </div>
+      <button type="button" onclick="confirmFinish()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl">
+        Yakunlash
+      </button>
+    </div>
+    {% endif %}
   </nav>
 
-  <main class="max-w-3xl mx-auto w-full p-6 flex-grow">
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
-      <div class="flex justify-between items-center border-b pb-4 border-slate-100">
-        <span class="text-sm text-slate-500 font-medium">Savol 3 / 20</span>
-        <span class="text-xs px-3 py-1 bg-sky-100 text-sky-800 rounded-full font-semibold">Matematika</span>
+  <main class="max-w-4xl mx-auto w-full p-6 flex-grow">
+    {% if messages %}
+      <div class="mb-4 space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if not attempt %}
+      <!-- ============ START SCREEN ============ -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl text-center space-y-6">
+        <div class="text-6xl">{% if is_exam %}🔒{% else %}📝{% endif %}</div>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900">{{ test.title }}</h1>
+          <p class="text-sm text-slate-500 mt-1">{{ test.subject }} · {{ test.get_test_type_display }}</p>
+        </div>
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+          <div class="p-4 bg-slate-50 rounded-xl">
+            <p class="text-xs text-slate-500">Savollar</p>
+            <p class="text-xl font-bold">{{ test.questions.count }}</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-xl">
+            <p class="text-xs text-slate-500">Vaqt</p>
+            <p class="text-xl font-bold">{{ test.duration_minutes }} daq</p>
+          </div>
+          <div class="p-4 bg-slate-50 rounded-xl">
+            <p class="text-xs text-slate-500">Sinf</p>
+            <p class="text-xl font-bold">{{ test.target_grade }}</p>
+          </div>
+        </div>
+        {% if is_exam %}
+          <div class="max-w-md mx-auto p-4 rounded-xl bg-amber-50 border border-amber-200 text-left text-sm text-amber-800 space-y-2">
+            <p class="font-semibold">⚠️ Diqqat — bu nazorat ishi!</p>
+            <ul class="list-disc list-inside text-xs space-y-1">
+              <li>Test <strong>fullscreen rejimida</strong> boshlanadi</li>
+              <li>Fullscreen dan chiqsangiz — <strong>qoidabuzarlik</strong> qayd etiladi</li>
+              <li>3 marta qoidabuzarlik — test <strong>avtomatik yakunlanadi</strong></li>
+              <li>Testni faqat <strong>bir marta</strong> topshirish mumkin</li>
+            </ul>
+          </div>
+        {% endif %}
+                {% if test.questions.count > 0 %}
+
+          {# OLDINGI NATIJA (practice uchun) #}
+          {% if not is_exam and best_score is not None %}
+          <div class="max-w-md mx-auto p-4 rounded-xl bg-indigo-50 border border-indigo-200">
+            <p class="text-xs text-indigo-600 font-medium mb-1">Oldingi eng yaxshi natijangiz</p>
+            <p class="text-2xl font-bold text-indigo-700">{{ best_score|floatformat:1 }}%</p>
+            <p class="text-xs text-indigo-600 mt-1">
+              Jami urinishlar: <b>{{ total_attempts }}</b>
+            </p>
+          </div>
+          {% endif %}
+
+          {# TUGMA #}
+          {% if is_exam %}
+            {# Exam — fullscreen overlay orqali #}
+            <a href="?start=1"
+               class="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md">
+              🔒 Testni Boshlash
+            </a>
+          {% else %}
+            {# Practice — qayta topshirish tugmasi #}
+            {% if best_score is not None %}
+              <a href="?start=1"
+                 class="inline-block px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md">
+                🔁 Yana Urinish
+              </a>
+            {% else %}
+              <a href="?start=1"
+                 class="inline-block px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md">
+                Testni Boshlash
+              </a>
+            {% endif %}
+          {% endif %}
+          <p class="text-xs text-slate-400">Boshlagandan keyin vaqt hisoblanadi</p>{% else %}
+          <p class="text-sm text-red-500 font-medium">Bu testda hali savollar yo'q.</p>
+          <a href="{% url 'dashboard' %}" class="inline-block px-6 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-medium">← Dashboard</a>
+        {% endif %}
       </div>
 
-      <h2 class="text-2xl font-bold text-slate-900">Tenglamaning ildizlarini toping: x² - 5x + 6 = 0</h2>
+    {% else %}
+      <!-- ============ TEST IN PROGRESS ============ -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-sm font-medium text-slate-700">Savollar</span>
+            <span class="text-xs text-slate-500">
+              <span id="answered-count">0</span> / {{ test.questions.count }} javob
+              <span id="violation-info" class="ml-3 text-red-600 font-semibold hidden">
+                ⚠️ <span id="violation-count">0</span>/3
+              </span>
+            </span>
+          </div>
+          <div id="nav-grid" class="flex flex-wrap gap-2"></div>
+        </div>
 
-      <div class="space-y-3">
-        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition">
-          <input type="radio" name="answer" value="A" class="w-4 h-4 text-blue-600">
-          <span class="text-base text-slate-800">A) x = 1, x = 6</span>
-        </label>
-        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition">
-          <input type="radio" name="answer" value="B" class="w-4 h-4 text-blue-600">
-          <span class="text-base text-slate-800">B) x = 2, x = 3</span>
-        </label>
-        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition">
-          <input type="radio" name="answer" value="C" class="w-4 h-4 text-blue-600">
-          <span class="text-base text-slate-800">C) x = -2, x = -3</span>
-        </label>
-        <label class="flex items-center gap-4 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition">
-          <input type="radio" name="answer" value="D" class="w-4 h-4 text-blue-600">
-          <span class="text-base text-slate-800">D) x = 0, x = 5</span>
-        </label>
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
+          <div class="flex justify-between items-center border-b pb-4 border-slate-100">
+            <span class="text-sm text-slate-500 font-medium">
+              Savol <span id="current-num">1</span> / {{ test.questions.count }}
+            </span>
+            <span class="text-xs px-3 py-1 bg-sky-100 text-sky-800 rounded-full font-semibold">
+              {{ test.subject }}
+            </span>
+          </div>
+          <div id="question-content"></div>
+          <div class="flex justify-between items-center pt-6 border-t border-slate-100">
+            <button type="button" onclick="prevQuestion()" id="prev-btn"
+                    class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm transition">
+              ← Orqaga
+            </button>
+            <button type="button" onclick="nextQuestion()" id="next-btn"
+                    class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md transition">
+              Keyingisi →
+            </button>
+          </div>
+        </div>
       </div>
-
-      <div class="flex justify-between items-center pt-6 border-t border-slate-100">
-        <button class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-medium text-sm transition">Orqaga</button>
-        <a href="/student_results.html" class="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md transition">Keyingisi →</a>
-      </div>
-    </div>
+    {% endif %}
   </main>
+
+  {% if attempt %}
+  {{ questions_data|json_script:"questions-data" }}
+
+  <script>
+    const QUESTIONS = JSON.parse(document.getElementById('questions-data').textContent);
+    const ATTEMPT_ID = {{ attempt.id }};
+    const REMAINING = {{ attempt.remaining_seconds }};
+    const IS_EXAM = {{ is_exam|yesno:"true,false" }};
+    const SUBMIT_URL = "{% url 'submit_test' attempt.id %}";
+    const VIOLATION_URL = "{% url 'report_violation' attempt.id %}";
+    const CSRF = "{{ csrf_token }}";
+
+    const IS_MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+    const IS_ANDROID_WEBVIEW = /wv/.test(navigator.userAgent);
+    const IS_IOS_WEBVIEW = IS_MOBILE && /iPhone|iPad|iPod/.test(navigator.userAgent) && !/Safari/.test(navigator.userAgent);
+    const IS_WEBVIEW = IS_ANDROID_WEBVIEW || IS_IOS_WEBVIEW;
+
+    let currentIdx = 0;
+    const answers = {};
+    let submitted = false;
+    let violationCount = 0;
+    let lastViolationAt = 0;
+    let enforcingFs = false;
+    const MAX_VIOLATIONS = 3;
+
+    // ============================================================
+    // FULLSCREEN
+    // ============================================================
+    function isFullscreen() {
+      return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                document.mozFullScreenElement || document.msFullscreenElement);
+    }
+
+    function requestFs() {
+      const el = document.documentElement;
+      try {
+        if (el.requestFullscreen) return el.requestFullscreen({ navigationUI: 'hide' });
+        if (el.webkitRequestFullscreen) return el.webkitRequestFullscreen();
+        if (el.mozRequestFullScreen) return el.mozRequestFullScreen();
+        if (el.msRequestFullscreen) return el.msRequestFullscreen();
+      } catch (e) {}
+      return Promise.reject(new Error('Fullscreen qo\'llab-quvvatlanmaydi'));
+    }
+
+    function updateFsStatus() {
+      if (!IS_EXAM) return;
+      const el = document.getElementById('fs-status');
+      if (!el) return;
+      if (isFullscreen()) {
+        el.className = 'px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold text-xs border border-emerald-200';
+        el.textContent = '✅ Fullscreen faol';
+      } else {
+        el.className = 'px-3 py-1.5 rounded-full bg-red-50 text-red-700 font-semibold text-xs border border-red-200';
+        el.textContent = '⚠️ Fullscreen yo\'q';
+      }
+    }
+
+    // OVERLAY DAN CHIQISH — muhim! Foydalanuvchi tugmani bosadi → fullscreen → overlay yashiriladi
+    function enterFullscreenAndStart() {
+      const err = document.getElementById('fs-error');
+      requestFs().then(() => {
+        const ov = document.getElementById('fs-overlay');
+        if (ov) ov.classList.add('hidden');
+        updateFsStatus();
+      }).catch((e) => {
+        if (err) {
+          err.textContent = '❌ Fullscreen yoqilmadi. Brauzer ruxsatini tekshiring yoki Chrome/Edge ishlatib ko\'ring.';
+          err.classList.remove('hidden');
+        }
+      });
+    }
+
+    // ============================================================
+    // VIOLATION
+    // ============================================================
+    function reportViolation(reason) {
+      if (!IS_EXAM || submitted) return;
+      const now = Date.now();
+      if (now - lastViolationAt < 2000) return;
+      lastViolationAt = now;
+      fetch(VIOLATION_URL + (reason ? `?reason=${encodeURIComponent(reason)}` : ''), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF },
+      }).catch(() => {});
+    }
+
+    function addViolation(reason) {
+      if (!IS_EXAM || submitted) return false;
+      violationCount += 1;
+      reportViolation(reason);
+      const info = document.getElementById('violation-info');
+      const count = document.getElementById('violation-count');
+      if (info && count) {
+        info.classList.remove('hidden');
+        count.textContent = violationCount;
+      }
+      if (violationCount >= MAX_VIOLATIONS) {
+        alert("❗ " + MAX_VIOLATIONS + " marta qoidabuzarlik qayd etildi.\nTest avtomatik yakunlanadi.");
+        doSubmit();
+        return true;
+      }
+      return false;
+    }
+
+    // ============================================================
+    // FULLSCREEN CHANGE
+    // ============================================================
+    function handleFsChange() {
+      if (!IS_EXAM || submitted) return;
+      updateFsStatus();
+      if (!isFullscreen() && !enforcingFs) {
+        const stopped = addViolation('exited_fullscreen');
+        if (stopped) return;
+        if (violationCount < MAX_VIOLATIONS) {
+          alert("⚠️ Fullscreen dan chiqdingiz! (" + violationCount + "/" + MAX_VIOLATIONS + ")\nTest qaytariladi.");
+          enforcingFs = true;
+          requestFs().finally(() => { enforcingFs = false; });
+        }
+      }
+    }
+
+    // ============================================================
+    // EXAM LISTENERS
+    // ============================================================
+    if (IS_EXAM) {
+      ['fullscreenchange', 'webkitfullscreenchange',
+       'mozfullscreenchange', 'MSFullscreenChange'].forEach(ev => {
+        document.addEventListener(ev, handleFsChange);
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && !submitted) addViolation('tab_hidden');
+      });
+
+      let blurTimer = null;
+      window.addEventListener('blur', () => {
+        if (submitted) return;
+        blurTimer = setTimeout(() => {
+          if (!submitted) addViolation('window_blur');
+        }, 2000);
+      });
+      window.addEventListener('focus', () => {
+        if (blurTimer) { clearTimeout(blurTimer); blurTimer = null; }
+      });
+
+      window.addEventListener('beforeunload', (e) => {
+        if (!submitted) {
+          e.preventDefault();
+          e.returnValue = '';
+        }
+      });
+
+      if (!IS_MOBILE) {
+        document.addEventListener('contextmenu', (e) => {
+          if (!submitted) e.preventDefault();
+        });
+        document.addEventListener('keydown', (e) => {
+          if (submitted) return;
+          const ctrl = e.ctrlKey || e.metaKey;
+          if (ctrl && ['c','v','a','p','s','u'].includes(e.key.toLowerCase())) {
+            e.preventDefault(); return false;
+          }
+          if (e.key === 'F12' || (ctrl && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))) {
+            e.preventDefault(); return false;
+          }
+          if (e.key === 'F5' || (ctrl && e.key.toLowerCase() === 'r')) {
+            e.preventDefault();
+            alert("Test davomida sahifani yangilash mumkin emas.");
+            return false;
+          }
+        });
+      }
+
+      if (IS_WEBVIEW) {
+        if (window.Android && typeof window.Android.onExamStart === 'function') {
+          try { window.Android.onExamStart(); } catch (e) {}
+        }
+        window.onAppBackground = function () {
+          if (!submitted) addViolation('app_background');
+        };
+      }
+
+      updateFsStatus();
+
+      // Agar fullscreen da bo'lsak — overlay yashirin
+      if (isFullscreen()) {
+        const ov = document.getElementById('fs-overlay');
+        if (ov) ov.classList.add('hidden');
+      }
+    }
+
+    // ============================================================
+    // TIMER
+    // ============================================================
+    let remaining = REMAINING;
+    const timerEl = document.getElementById('timer');
+    function fmt(n) {
+      n = Math.max(0, Math.floor(n));
+      return String(Math.floor(n / 60)).padStart(2, '0') + ':' +
+             String(n % 60).padStart(2, '0');
+    }
+    function tick() {
+      if (submitted) return;
+      timerEl.textContent = fmt(remaining);
+      if (remaining <= 0) {
+        alert("Vaqt tugadi! Test avtomatik yakunlanadi.");
+        doSubmit();
+        return;
+      }
+      remaining -= 1;
+      setTimeout(tick, 1000);
+    }
+
+    // ============================================================
+    // RENDER
+    // ============================================================
+    function renderNav() {
+  const grid = document.getElementById('nav-grid');
+  grid.innerHTML = '';
+  let answered = 0;
+  QUESTIONS.forEach((q, i) => {
+    const has = answers[q.id] !== undefined;
+    if (has) answered++;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = i + 1;
+    btn.className = 'w-10 h-10 rounded-lg text-sm font-semibold transition ' +
+      (i === currentIdx
+        ? 'bg-blue-600 text-white ring-2 ring-blue-300'
+        : has
+          ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+          : 'bg-slate-100 text-slate-600 hover:bg-slate-200');
+    const pts = (q.points !== undefined && q.points !== null) ? Number(q.points) : 1;
+    btn.title = `${pts} ball`;
+    btn.onclick = () => { currentIdx = i; renderAll(); };
+    grid.appendChild(btn);
+  });
+  document.getElementById('answered-count').textContent = answered;
+}
+
+    function renderQuestion() {
+      const q = QUESTIONS[currentIdx];
+      document.getElementById('current-num').textContent = currentIdx + 1;
+      const container = document.getElementById('question-content');
+      container.innerHTML = '';
+
+  // Savol matni
+      const h = document.createElement('h2');
+      h.className = 'text-2xl font-bold text-slate-900 mb-2';
+      h.textContent = q.text;
+      container.appendChild(h);
+
+  // ✅ YANGI: ball ko'rsatish
+      const pts = (q.points !== undefined && q.points !== null) ? Number(q.points) : 1;
+const pointsBadge = document.createElement('p');
+pointsBadge.className = 'text-sm text-amber-600 font-semibold mb-4';
+pointsBadge.textContent = `⭐ ${pts} ball`;
+container.appendChild(pointsBadge);
+
+      const ans = answers[q.id];
+
+      if (q.type === 'open') {
+        const lbl = document.createElement('label');
+        lbl.className = 'block text-sm font-medium text-slate-600 mb-2';
+        lbl.textContent = 'Javobingizni yozing:';
+        container.appendChild(lbl);
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = ans?.value || '';
+        inp.placeholder = 'Javob...';
+        inp.className = 'w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white';
+        inp.oninput = () => {
+          answers[q.id] = { type: 'open', value: inp.value };
+          renderNav();
+        };
+        container.appendChild(inp);
+      } else {
+        const wrap = document.createElement('div');
+        wrap.className = 'space-y-3';
+        q.options.forEach(opt => {
+          const checked = q.type === 'single'
+            ? ans?.value === opt.id
+            : (ans?.values || []).includes(opt.id);
+          const lbl = document.createElement('label');
+          lbl.className = 'flex items-center gap-4 p-4 rounded-xl border cursor-pointer transition ' +
+            (checked ? 'border-blue-500 bg-blue-50'
+                     : 'border-slate-200 bg-slate-50 hover:border-blue-500 hover:bg-blue-50/50');
+          const inp = document.createElement('input');
+          inp.type = q.type === 'single' ? 'radio' : 'checkbox';
+          inp.name = 'q_' + q.id;
+          inp.value = opt.id;
+          inp.checked = checked;
+          inp.className = 'w-4 h-4 text-blue-600';
+          inp.onchange = () => {
+            if (q.type === 'single') answers[q.id] = { type: 'single', value: opt.id };
+            else {
+              let cur = (answers[q.id]?.values || []).slice();
+              if (inp.checked) cur.push(opt.id);
+              else cur = cur.filter(x => x !== opt.id);
+              answers[q.id] = { type: 'multiple', values: cur };
+            }
+            renderAll();
+          };
+          const span = document.createElement('span');
+          span.className = 'text-base text-slate-800';
+          span.textContent = opt.text;
+          lbl.appendChild(inp);
+          lbl.appendChild(span);
+          wrap.appendChild(lbl);
+        });
+        container.appendChild(wrap);
+      }
+
+      const prevBtn = document.getElementById('prev-btn');
+      prevBtn.disabled = currentIdx === 0;
+      prevBtn.classList.toggle('opacity-40', currentIdx === 0);
+      const nextBtn = document.getElementById('next-btn');
+      if (currentIdx === QUESTIONS.length - 1) {
+        nextBtn.textContent = 'Yakunlash';
+        nextBtn.onclick = confirmFinish;
+        nextBtn.className = 'px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm shadow-md transition';
+      } else {
+        nextBtn.textContent = 'Keyingisi →';
+        nextBtn.onclick = nextQuestion;
+        nextBtn.className = 'px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-md transition';
+      }
+    }
+
+    function renderAll() { renderNav(); renderQuestion(); }
+    function nextQuestion() { if (currentIdx < QUESTIONS.length - 1) { currentIdx++; renderAll(); } }
+    function prevQuestion() { if (currentIdx > 0) { currentIdx--; renderAll(); } }
+
+    // ============================================================
+    // SUBMIT
+    // ============================================================
+    function confirmFinish() {
+      const unanswered = QUESTIONS.length - Object.keys(answers).length;
+      const msg = unanswered > 0
+        ? unanswered + ' ta savolga javob bermadingiz. Baribir yakunlaysizmi?'
+        : "Testni yakunlashni tasdiqlaysizmi?";
+      if (confirm(msg)) doSubmit();
+    }
+
+    function doSubmit() {
+      if (submitted) return;
+      submitted = true;
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = SUBMIT_URL;
+      const csrf = document.createElement('input');
+      csrf.type = 'hidden';
+      csrf.name = 'csrfmiddlewaretoken';
+      csrf.value = CSRF;
+      form.appendChild(csrf);
+      for (const [qid, ans] of Object.entries(answers)) {
+        if (ans.type === 'single' || ans.type === 'open') {
+          const inp = document.createElement('input');
+          inp.type = 'hidden';
+          inp.name = 'question_' + qid;
+          inp.value = ans.value;
+          form.appendChild(inp);
+        } else if (ans.type === 'multiple') {
+          ans.values.forEach(v => {
+            const inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = 'question_' + qid;
+            inp.value = v;
+            form.appendChild(inp);
+          });
+        }
+      }
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    tick();
+    renderAll();
+  </script>
+  {% endif %}
 </body>
 </html>

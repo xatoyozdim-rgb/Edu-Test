@@ -1,0 +1,152 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O'qituvchilar | Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'admin_panel' %}" class="flex items-center gap-3">
+      <span class="text-2xl">👑</span>
+      <span class="text-xl font-bold text-purple-600">Admin Panel</span>
+    </a>
+    <a href="{% url 'admin_panel' %}" class="text-sm font-medium text-slate-700 hover:text-purple-600">← Orqaga</a>
+  </nav>
+
+  <main class="max-w-5xl mx-auto w-full p-6 my-8 flex-grow space-y-6">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'warning' %}bg-amber-100 text-amber-700 border-amber-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <h1 class="text-2xl font-bold text-slate-900">👨‍🏫 O'qituvchilarni boshqarish</h1>
+
+    <!-- PENDING -->
+    <div>
+      <h2 class="text-lg font-bold text-slate-900 mb-3">⏳ Kutilayotganlar ({{ pending|length }})</h2>
+      {% if pending %}
+      <div class="space-y-3">
+        {% for t in pending %}
+        <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+              <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center flex-shrink-0">
+                {{ t.first_name|first|upper }}{{ t.last_name|first|upper }}
+              </div>
+              <div class="min-w-0">
+                <p class="font-semibold text-slate-900">{{ t.first_name }} {{ t.last_name }}</p>
+                <p class="text-xs text-slate-500 truncate">{{ t.email }}</p>
+                <p class="text-xs text-slate-400 mt-1">Ro'yxatdan o'tgan: {{ t.date_joined|date:"d.m.Y H:i" }}</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <form method="post" action="{% url 'admin_approve_teacher' t.id %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl">
+                  ✅ Ruxsat
+                </button>
+              </form>
+              <form method="post" action="{% url 'admin_reject_teacher' t.id %}" class="inline"
+                    onsubmit="return confirm('{{ t.get_display_name|escapejs }} ni rad etishni tasdiqlaysizmi?');">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl">
+                  ❌ Rad etish
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+        <div class="text-4xl mb-2">✅</div>
+        <p class="text-sm text-slate-500">Kutilayotgan o'qituvchilar yo'q</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- APPROVED -->
+    <div>
+      <h2 class="text-lg font-bold text-slate-900 mb-3">✅ Tasdiqlanganlar ({{ approved|length }})</h2>
+      {% if approved %}
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100/70 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
+            <tr>
+              <th class="p-3 text-left">F.I.</th>
+              <th class="p-3 text-left">Email</th>
+              <th class="p-3 text-right">Amal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for t in approved %}
+            <tr class="hover:bg-slate-50">
+              <td class="p-3">{{ t.first_name }} {{ t.last_name }}</td>
+              <td class="p-3 text-slate-600">{{ t.email }}</td>
+              <td class="p-3 text-right">
+                <form method="post" action="{% url 'admin_reject_teacher' t.id %}" class="inline"
+                      onsubmit="return confirm('{{ t.get_display_name|escapejs }} ni rad etishni tasdiqlaysizmi?');">
+                  {% csrf_token %}
+                  <button type="submit" class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold rounded-lg">
+                    ❌ Rad etish
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-sm text-slate-500">Hozircha tasdiqlangan o'qituvchilar yo'q</p>
+      {% endif %}
+    </div>
+
+    <!-- REJECTED -->
+    {% if rejected %}
+    <div>
+      <h2 class="text-lg font-bold text-slate-900 mb-3">❌ Rad etilganlar ({{ rejected|length }})</h2>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100/70 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
+            <tr>
+              <th class="p-3 text-left">F.I.</th>
+              <th class="p-3 text-left">Email</th>
+              <th class="p-3 text-right">Amal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for t in rejected %}
+            <tr class="hover:bg-slate-50">
+              <td class="p-3 text-slate-500">{{ t.first_name }} {{ t.last_name }}</td>
+              <td class="p-3 text-slate-400">{{ t.email }}</td>
+              <td class="p-3 text-right">
+                <form method="post" action="{% url 'admin_approve_teacher' t.id %}" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-xs font-semibold rounded-lg">
+                    ✅ Qayta ruxsat berish
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </main>
+</body>
+</html>

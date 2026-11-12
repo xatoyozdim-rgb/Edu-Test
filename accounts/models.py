@@ -9,6 +9,7 @@ class User(AbstractUser):
     grade = models.CharField(max_length=10, default='barcha')
     letter = models.CharField(max_length=10, default='barchasi')
     monthly_champion_count = models.PositiveIntegerField(default=0)
+    is_approved = models.BooleanField(default=True)
 
     # Ustozlar uchun Google Auth va Shaxsiy Google Cloud ma'lumotlari
     google_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
@@ -27,7 +28,18 @@ class User(AbstractUser):
             else:
                 return f"{name} 👑 ({self.monthly_champion_count}xChempion)"
         return name
+class Subject(models.Model):
+    """Umumiy fanlar ro'yxati — barcha o'qituvchilar uchun"""
+    name = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Fan'
+        verbose_name_plural = 'Fanlar'
+
+    def __str__(self):
+        return self.name
 class Test(models.Model):
     TEST_TYPES = [
         ('exam', 'Nazorat ishi'),
@@ -88,8 +100,12 @@ class TestAttempt(models.Model):
     violation_count = models.PositiveIntegerField(default=0)
     excuse_message = models.TextField(blank=True, null=True)
     attempt_number = models.PositiveIntegerField(default=1)
+    is_stale = models.BooleanField(default=False)
     def remaining_seconds(self):
         return max(0, int(self.test.duration_minutes * 60 - (timezone.now() - self.started_at).total_seconds()))
+    earned_points = models.FloatField(default=0.0)   # YANGI
+    total_points = models.FloatField(default=0.0)
+
 
 class StudentAnswer(models.Model):
     attempt = models.ForeignKey(TestAttempt, on_delete=models.CASCADE, related_name='answers')

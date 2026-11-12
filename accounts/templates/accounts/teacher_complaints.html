@@ -1,28 +1,125 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O'qituvchi Shikoyatlari | EduTest</title>
+  <title>Shikoyatlar | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen p-6">
-  <div class="max-w-5xl mx-auto space-y-6">
-    <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-slate-900">Kelib Tushgan Shikoyat va Takliflar</h1>
-      <a href="/dashboard.html" class="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">Dashboard</a>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+      <a href="{% url 'teacher_tests' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Testlarim</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto w-full p-6 my-8 flex-grow space-y-6">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900">⚠️ Shikoyat va Takliflar</h1>
+      <p class="text-sm text-slate-500 mt-1">O'quvchilardan kelib tushgan murojaatlar</p>
     </div>
 
-    <div class="space-y-4">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex justify-between items-center">
-        <div>
-          <span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">Jarayonda</span>
-          <h3 class="font-bold text-slate-900 mt-2">Matematika testidagi 12-savol xato tuzilgan</h3>
-          <p class="text-xs text-slate-500">Yuboruvchi: Jasur Rahimov (9-A sinf)</p>
-        </div>
-        <a href="/complaint_review.html" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition">Ko'rib chiqish</a>
-      </div>
+    <!-- STATUS FILTER -->
+    <div class="flex flex-wrap gap-2">
+      <a href="?status=all" class="px-4 py-2 rounded-xl text-sm font-semibold transition
+        {% if status_filter == 'all' %}bg-slate-800 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-slate-50{% endif %}">
+        Barchasi ({{ counts.all }})
+      </a>
+      <a href="?status=pending" class="px-4 py-2 rounded-xl text-sm font-semibold transition
+        {% if status_filter == 'pending' %}bg-amber-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-amber-50{% endif %}">
+        ⏳ Jarayonda ({{ counts.pending }})
+      </a>
+      <a href="?status=reviewed" class="px-4 py-2 rounded-xl text-sm font-semibold transition
+        {% if status_filter == 'reviewed' %}bg-blue-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-blue-50{% endif %}">
+        👀 Ko'rilgan ({{ counts.reviewed }})
+      </a>
+      <a href="?status=resolved" class="px-4 py-2 rounded-xl text-sm font-semibold transition
+        {% if status_filter == 'resolved' %}bg-emerald-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-emerald-50{% endif %}">
+        ✅ Hal qilingan ({{ counts.resolved }})
+      </a>
+      <a href="?status=rejected" class="px-4 py-2 rounded-xl text-sm font-semibold transition
+        {% if status_filter == 'rejected' %}bg-red-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-red-50{% endif %}">
+        ❌ Rad etilgan ({{ counts.rejected }})
+      </a>
     </div>
-  </div>
+
+    <!-- RO'YXAT -->
+    {% if complaints %}
+    <div class="space-y-4">
+      {% for c in complaints %}
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              {% if c.status == 'pending' %}
+                <span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">⏳ Jarayonda</span>
+              {% elif c.status == 'reviewed' %}
+                <span class="px-2.5 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">👀 Ko'rilgan</span>
+              {% elif c.status == 'resolved' %}
+                <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">✅ Hal qilingan</span>
+              {% elif c.status == 'rejected' %}
+                <span class="px-2.5 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">❌ Rad etilgan</span>
+              {% endif %}
+
+              <span class="text-xs text-slate-500">#{{ c.id }}</span>
+              <span class="text-xs text-slate-400">·</span>
+              <span class="text-xs text-slate-500">{{ c.created_at|date:"d.m.Y H:i" }}</span>
+            </div>
+
+            <h3 class="font-bold text-slate-900 truncate">{{ c.question.test.title }}</h3>
+            <p class="text-xs text-slate-500 mt-1">
+              <b>{{ c.question.test.subject }}</b> · Savol: "{{ c.question.text|truncatechars:60 }}"
+            </p>
+            <p class="text-sm text-slate-700 mt-2 line-clamp-2">{{ c.reason|truncatechars:140 }}</p>
+
+            <p class="text-xs text-slate-500 mt-3">
+              👤 {{ c.student.get_display_name|default:"O'quvchi"|default:"Noma'lum" }}
+              {% if c.student.grade != 'barcha' %}· {{ c.student.grade }}-{{ c.student.letter }}{% endif %}
+            </p>
+          </div>
+
+          <a href="{% url 'review_complaint' c.id %}"
+             class="self-start px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition whitespace-nowrap">
+            {% if c.status == 'pending' %}Ko'rib chiqish{% else %}Ko'rish{% endif %}
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">
+        {% if status_filter == 'all' %}Hozircha shikoyatlar yo'q{% else %}Bu turda shikoyat yo'q{% endif %}
+      </h3>
+      <p class="text-sm text-slate-500">
+        {% if status_filter != 'all' %}
+          <a href="?status=all" class="text-blue-600 hover:underline">Barcha shikoyatlarni ko'rish</a>
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </main>
 </body>
 </html>

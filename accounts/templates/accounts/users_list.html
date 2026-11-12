@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foydalanuvchilar | EduTest</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+      <a href="{% url 'teacher_tests' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Testlarim</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto w-full p-6 my-8 flex-grow space-y-6">
+
+    {% if messages %}
+      <div class="space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="flex justify-between items-start flex-wrap gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900">👥 Foydalanuvchilar</h1>
+        <p class="text-sm text-slate-500 mt-1">Barcha o'quvchilar va o'qituvchilar</p>
+      </div>
+      <form method="get" class="flex gap-2">
+        <input type="hidden" name="role" value="{{ role_filter }}">
+        <input type="text" name="q" value="{{ search }}"
+               placeholder="Ism, familiya, login, email..."
+               class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:outline-none focus:border-blue-600 w-64">
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl">
+          🔍 Qidirish
+        </button>
+      </form>
+    </div>
+
+    <!-- FILTER -->
+    <div class="flex flex-wrap gap-2">
+      <a href="?role=all{% if search %}&q={{ search|urlencode }}{% endif %}"
+         class="px-4 py-2 rounded-xl text-sm font-semibold transition
+         {% if role_filter == 'all' %}bg-slate-800 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-slate-50{% endif %}">
+        Barchasi ({{ counts.all }})
+      </a>
+      <a href="?role=student{% if search %}&q={{ search|urlencode }}{% endif %}"
+         class="px-4 py-2 rounded-xl text-sm font-semibold transition
+         {% if role_filter == 'student' %}bg-blue-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-blue-50{% endif %}">
+        👨‍🎓 O'quvchilar ({{ counts.student }})
+      </a>
+      <a href="?role=teacher{% if search %}&q={{ search|urlencode }}{% endif %}"
+         class="px-4 py-2 rounded-xl text-sm font-semibold transition
+         {% if role_filter == 'teacher' %}bg-purple-600 text-white{% else %}bg-white text-slate-700 border border-slate-200 hover:bg-purple-50{% endif %}">
+        🎓 O'qituvchilar ({{ counts.teacher }})
+      </a>
+    </div>
+
+    {% if users %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100/70 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
+              <th class="p-4">Foydalanuvchi</th>
+              <th class="p-4">Rol</th>
+              <th class="p-4">Sinf</th>
+              <th class="p-4">Fan</th>
+              <th class="p-4">Email</th>
+              <th class="p-4">Login</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-sm">
+            {% for u in users %}
+            <tr class="hover:bg-blue-50/30 transition">
+              <td class="p-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-full {% if u.is_teacher %}bg-purple-100 text-purple-700{% else %}bg-blue-100 text-blue-700{% endif %} font-bold text-xs flex items-center justify-center flex-shrink-0">
+                    {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                  </div>
+                  <div class="min-w-0">
+                    <p class="font-semibold text-slate-900 truncate">{{ u.get_display_name|default:u.username }}</p>
+                    <p class="text-xs text-slate-500 truncate">{{ u.first_name }} {{ u.last_name }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="p-4">
+                {% if u.is_teacher %}
+                  <span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">🎓 O'qituvchi</span>
+                {% else %}
+                  <span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">👨‍🎓 O'quvchi</span>
+                {% endif %}
+              </td>
+              <td class="p-4 text-slate-600">
+                {% if u.role == 'student' and u.grade != 'barcha' %}
+                  {{ u.grade }}-{{ u.letter }}
+                {% else %}—{% endif %}
+              </td>
+              <td class="p-4 text-slate-600">{{ u.subject|default:"—" }}</td>
+              <td class="p-4 text-slate-600">{{ u.email|default:"—" }}</td>
+              <td class="p-4 font-mono text-xs text-slate-500">{{ u.username }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Foydalanuvchi topilmadi</h3>
+      <p class="text-sm text-slate-500">
+        {% if search %}«{{ search }}» bo'yicha hech narsa topilmadi{% else %}Hozircha foydalanuvchilar yo'q{% endif %}
+      </p>
+    </div>
+    {% endif %}
+
+  </main>
+</body>
+</html>

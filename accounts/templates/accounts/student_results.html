@@ -1,29 +1,176 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Natijasi | EduTest</title>
+  <title>Mening Natijalarim | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 shadow-xl text-center space-y-6">
-    <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto">🎉</div>
-    <div>
-      <h1 class="text-2xl font-bold text-slate-900">Test Yakunlandi!</h1>
-      <p class="text-sm text-slate-500 mt-1">Sizning natijangiz avtomatik hisoblandi</p>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <div class="flex items-center gap-4">
+      <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Dashboard</a>
+      <a href="{% url 'student_rankings' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">Reyting</a>
+      <a href="{% url 'logout' %}" class="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-medium">Chiqish</a>
     </div>
-    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 grid grid-cols-2 gap-4">
-      <div>
-        <p class="text-xs text-slate-500">To'g'ri javoblar</p>
-        <p class="text-xl font-bold text-emerald-600">18 / 20</p>
+  </nav>
+
+  <main class="max-w-4xl mx-auto w-full p-6 my-8 flex-grow">
+
+    {% if messages %}
+      <div class="mb-4 space-y-2">
+        {% for message in messages %}
+          <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+            {{ message }}
+          </div>
+        {% endfor %}
       </div>
-      <div>
-        <p class="text-xs text-slate-500">Umumiy Ball</p>
-        <p class="text-xl font-bold text-blue-600">90%</p>
-      </div>
+    {% endif %}
+
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-slate-900">📊 Mening Natijalarim</h1>
+      <p class="text-sm text-slate-500 mt-1">Barcha topshirgan testlaringiz</p>
     </div>
-    <a href="/dashboard.html" class="block w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition shadow-md">Dashboard ga qaytish</a>
-  </div>
+
+    {% if results %}
+    <div class="space-y-3">
+      {% for attempt in results %}
+      {% with is_survey=attempt.test.test_type %}
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <h3 class="font-bold text-lg text-slate-900 truncate">{{ attempt.test.title }}</h3>
+
+              {# SO'ROVNOMA / ANONIM — status #}
+              {% if is_survey == 'survey' or is_survey == 'anonymous' %}
+                {% if attempt.status == 'completed' %}
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold whitespace-nowrap">✅ Tugatdingiz</span>
+                {% elif attempt.status == 'in_progress' %}
+                  <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold whitespace-nowrap">❌ Tugatilmagan</span>
+                {% endif %}
+              {% else %}
+                {# ODDIY TEST — status #}
+                {% if attempt.status == 'completed' %}
+                  <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">✅</span>
+                {% elif attempt.status == 'in_progress' %}
+                  <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">⏳</span>
+                {% elif attempt.status == 'disqualified' %}
+                  <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">❌</span>
+                {% elif attempt.status == 'blocked' %}
+                  <span class="px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">🚫</span>
+                {% endif %}
+              {% endif %}
+            </div>
+
+                        <p class="text-xs text-slate-500">
+              {{ attempt.test.subject }} · {{ attempt.test.get_test_type_display }}
+              · Boshlangan: {{ attempt.started_at|date:"d.m.Y H:i" }}
+              {% if attempt.finished_at %}· Tugatilgan: {{ attempt.finished_at|date:"d.m.Y H:i" }}{% endif %}
+            </p>
+
+            {% if attempt.is_stale %}
+            <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+              ⚠️ O'qituvchi testni o'zgartirgan. <b>Qayta topshirishingiz kerak.</b>
+            </div>
+            {% endif %}
+
+            {% if attempt.violation_count > 0 %}
+              <p class="text-xs text-red-600 mt-1">⚠️ Qoidabuzarliklar: {{ attempt.violation_count }}</p>
+            {% endif %}
+          </div>
+
+          {# ODDIY TEST — ball/foiz #}
+          {% if is_survey != 'survey' and is_survey != 'anonymous' %}
+            {% if attempt.status == 'completed' %}
+            <div class="flex gap-4 flex-wrap">
+              <div class="text-center">
+                <p class="text-xs text-slate-500 mb-1">To'g'ri javoblar</p>
+                <p class="text-lg font-bold text-slate-900">
+                  {{ attempt.correct_count }}<span class="text-sm text-slate-400">/{{ attempt.total_questions }}</span>
+                </p>
+              </div>
+              {% if attempt.total_points %}
+              <div class="text-center">
+                <p class="text-xs text-slate-500 mb-1">To'plangan ball</p>
+                <p class="text-lg font-bold text-amber-600">
+                  {{ attempt.earned_points|floatformat:1 }}<span class="text-sm text-slate-400">/{{ attempt.total_points|floatformat:1 }}</span>
+                </p>
+              </div>
+              {% endif %}
+              <div class="text-center">
+                <p class="text-xs text-slate-500 mb-1">Foiz</p>
+                <p class="text-2xl font-bold
+                  {% if attempt.score >= 80 %}text-emerald-600
+                  {% elif attempt.score >= 60 %}text-amber-600
+                  {% else %}text-red-600{% endif %}">
+                  {{ attempt.score }}%
+                </p>
+              </div>
+            </div>
+            {% elif attempt.status == 'in_progress' %}
+              <a href="{% url 'test_view' attempt.test.id %}"
+                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl self-start">
+                Davom etish
+              </a>
+            {% endif %}
+          {% else %}
+            {# SO'ROVNOMA — "Davom etish" tugmasi #}
+            {% if attempt.status == 'in_progress' %}
+              <a href="{% url 'test_view' attempt.test.id %}"
+                 class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl self-start">
+                Davom etish
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {# SHIKOYAT TUGMASI — faqat oddiy test + completed #}
+        {% if attempt.status == 'completed' and is_survey != 'survey' and is_survey != 'anonymous' %}
+<div class="mt-4 pt-4 border-t border-slate-100 flex justify-end gap-2 flex-wrap">
+
+  {# Qayta topshirish — exam stale YOKI practice #}
+  {% if attempt.is_stale %}
+    <a href="{% url 'test_view' attempt.test.id %}?start=1"
+       class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition">
+      🔄 Qayta topshirish
+    </a>
+  {% elif attempt.test.test_type == 'practice' %}
+    <a href="{% url 'test_view' attempt.test.id %}?start=1"
+       class="px-4 py-2 text-sm bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-xl transition">
+      🔁 Yana topshirish
+    </a>
+  {% endif %}
+
+  <a href="{% url 'file_complaint' attempt.id %}"
+     class="px-4 py-2 text-sm bg-amber-50 hover:bg-amber-100 text-amber-700 font-semibold rounded-xl transition">
+    ⚠️ Shikoyat yuborish
+  </a>
+</div>
+{% endif %}
+
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+      <div class="text-6xl mb-4">📭</div>
+      <h3 class="text-lg font-bold text-slate-900 mb-2">Hozircha natijalar yo'q</h3>
+      <p class="text-sm text-slate-500 mb-4">Test topshirganingizdan keyin natijalar shu yerda ko'rinadi</p>
+      <a href="{% url 'dashboard' %}" class="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition">
+        Testlarni ko'rish
+      </a>
+    </div>
+    {% endif %}
+
+  </main>
 </body>
 </html>

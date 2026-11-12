@@ -1,157 +1,532 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="uz" class="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Yaratish | EduTest</title>
+  <title>{% if test %}Tahrirlash{% else %}Yangi Test{% endif %} | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
-  <main class="max-w-4xl mx-auto w-full p-6 my-8">
-    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-8">
-      
-      <!-- HEADER -->
+
+  <nav class="border-b border-slate-200 bg-white px-6 py-4 flex justify-between items-center shadow-sm">
+    <a href="{% url 'dashboard' %}" class="flex items-center gap-3">
+      <span class="text-2xl">🎓</span>
+      <span class="text-xl font-bold text-blue-600">EduTest</span>
+    </a>
+    <a href="{% url 'teacher_tests' %}" class="text-sm font-medium text-slate-700 hover:text-blue-600">← Testlarim</a>
+  </nav>
+
+  <main class="max-w-4xl mx-auto w-full p-6 my-8 flex-grow">
+    <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl space-y-6">
+
       <div class="flex justify-between items-center border-b pb-4 border-slate-100">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900">Yangi Test Yaratish</h1>
-          <p class="text-xs text-slate-500">Test parametrlarini belgilang va savollarni kiriting yoki fayldan yuklang</p>
-        </div>
-        <a href="/dashboard.html" class="px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-medium transition">Bekor qilish</a>
+        <h1 class="text-2xl font-bold text-slate-900">
+          {% if test %}Testni Tahrirlash{% else %}Yangi Test Yaratish{% endif %}
+        </h1>
+        <a href="{% url 'teacher_tests' %}" class="px-4 py-2 text-sm bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl font-medium">Bekor qilish</a>
       </div>
 
-      <!-- FAYLDAN FAYL YUKLASH BO'LIMI (EXCEL / WORD / TXT) -->
-      <div class="p-6 rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50/50 hover:bg-blue-50 transition text-center space-y-3">
-        <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mx-auto text-2xl font-bold">
-          📁
+      {% if messages %}
+        <div class="space-y-2">
+          {% for message in messages %}
+            <div class="p-3 rounded-xl {% if message.tags == 'error' %}bg-red-100 text-red-700 border-red-200{% else %}bg-emerald-100 text-emerald-700 border-emerald-200{% endif %} text-sm font-medium border">
+              {{ message }}
+            </div>
+          {% endfor %}
         </div>
-        <div>
-          <h3 class="font-bold text-slate-900 text-base">Testlarni fayldan ommaviy yuklash</h3>
-          <p class="text-xs text-slate-500 mt-1">Excel (.xlsx), Word (.docx) yoki Matnli (.txt) fayllarni ushbu yerga tashlang yoki tanlang</p>
-        </div>
-        <div class="flex justify-center items-center gap-3 pt-2">
-          <input type="file" id="test-file-upload" class="hidden" accept=".xlsx,.docx,.txt,.csv">
-          <label for="test-file-upload" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold cursor-pointer shadow-md transition">
-            Faylni Tanlash
-          </label>
-          <a href="#" class="text-xs text-blue-600 font-semibold hover:underline">▶ Andoza faylni yuklab olish</a>
-        </div>
-      </div>
+      {% endif %}
 
-      <div class="relative flex py-1 items-center">
-        <div class="flex-grow border-t border-slate-200"></div>
-        <span class="flex-shrink mx-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">Yoki qo'lda to'ldiring</span>
-        <div class="flex-grow border-t border-slate-200"></div>
-      </div>
+      <form method="post"
+            action="{% if test %}{% url 'test_edit' test.id %}{% else %}{% url 'test_create' %}{% endif %}"
+            id="test-form"
+            class="space-y-6">
+        {% csrf_token %}
 
-      <!-- QO'LDA TUSHIRILADIGAN FORM -->
-      <form class="space-y-6">
-        
-        <!-- ASOSIY PARAMETRLAR VA KATEGORIYALAR -->
+        <!-- ASOSIY PARAMETRLAR -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Test Nomi</label>
-            <input type="text" required class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm" placeholder="Masalan: Fizika 8-sinf">
+
+          <div class="sm:col-span-2 md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Test Nomi *</label>
+            <input type="text" name="title" required maxlength="255"
+                   value="{{ test.title|default:'' }}"
+                   class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm"
+                   placeholder="Masalan: Fizika 8-sinf Mexanika">
           </div>
 
-          <!-- KENGAYTIRILGAN KATEGORIYALAR -->
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Fan / Kategoriya</label>
-            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
-              <option value="" disabled selected>Kategoriyani tanlang</option>
-              <option>Matematika</option>
-              <option>Fizika</option>
-              <option>Informatika va AT</option>
-              <option>Kimyo</option>
-              <option>Biologiya</option>
-              <option>O'zbek tili va Adabiyot</option>
-              <option>Ingliz tili (IELTS / CEFR)</option>
-              <option>Tarix va Huquq</option>
-              <option>Geografiya</option>
-              <option>Olimpiada testlari</option>
-              <option>Mantiqiy savollar / IQ</option>
-              <option>DTM standart testlari</option>
-              <option>Umumiy Dunyoqarash</option>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Fan *</label>
+            <select name="subject" id="subject-select" required onchange="toggleNewSubject()"
+                    class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm focus:outline-none focus:border-blue-600 focus:bg-white">
+              <option value="">-- Fan tanlang --</option>
+              {% for subj in subjects %}
+                <option value="{{ subj.name }}" {% if test.subject == subj.name %}selected{% endif %}>{{ subj.name }}</option>
+              {% endfor %}
+              <option value="__new__">+ Yangi fan qo'shish</option>
             </select>
+            <input type="text" name="new_subject" id="new-subject-input"
+                   maxlength="100"
+                   class="hidden mt-2 w-full rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white"
+                   placeholder="Yangi fan nomi (masalan: Matematika)">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Test Turi</label>
+            <select name="test_type" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm">
+              {% with tt=test.test_type|default:'exam' %}
+                <option value="exam" {% if tt == 'exam' %}selected{% endif %}>Nazorat ishi</option>
+                <option value="practice" {% if tt == 'practice' %}selected{% endif %}>Mashq</option>
+                <option value="survey" {% if tt == 'survey' %}selected{% endif %}>So'rovnoma</option>
+                <option value="anonymous" {% if tt == 'anonymous' %}selected{% endif %}>Anonim</option>
+              {% endwith %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Vaqt (daq)</label>
+            <input type="number" name="duration_minutes" min="5" max="180"
+                   value="{{ test.duration_minutes|default:45 }}"
+                   class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm">
           </div>
 
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Mo'ljallangan Sinf</label>
-            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
-              <option value="">Barcha sinflar</option>
-              <option>5-sinf</option>
-              <option>6-sinf</option>
-              <option>7-sinf</option>
-              <option>8-sinf</option>
-              <option>9-sinf</option>
-              <option>10-sinf</option>
-              <option>11-sinf</option>
-              <option>Abituriyentlar / Talabalar</option>
+            <select name="target_grade" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm">
+              <option value="barcha" {% if test.target_grade == 'barcha' or not test %}selected{% endif %}>Barcha sinflar</option>
+              <option value="7" {% if test.target_grade == '7' %}selected{% endif %}>7-sinf</option>
+              <option value="8" {% if test.target_grade == '8' %}selected{% endif %}>8-sinf</option>
+              <option value="9" {% if test.target_grade == '9' %}selected{% endif %}>9-sinf</option>
+              <option value="10" {% if test.target_grade == '10' %}selected{% endif %}>10-sinf</option>
+              <option value="11" {% if test.target_grade == '11' %}selected{% endif %}>11-sinf</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Vaqt Chegarasi (daqiqa)</label>
-            <input type="number" min="5" max="180" value="45" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Qiyinchilik Darajasi</label>
-            <select class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
-              <option>Oson (O'rganuvchilar uchun)</option>
-              <option selected>O'rtacha (Standart)</option>
-              <option>Murakkab (Olimpiada/DTM)</option>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Sinf Harfi</label>
+            <select name="target_letter" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm">
+              <option value="barchasi" {% if test.target_letter == 'barchasi' or not test %}selected{% endif %}>Barchasi</option>
+              <option value="A" {% if test.target_letter == 'A' %}selected{% endif %}>A</option>
+              <option value="B" {% if test.target_letter == 'B' %}selected{% endif %}>B</option>
+              <option value="D" {% if test.target_letter == 'D' %}selected{% endif %}>D</option>
             </select>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">O'tish Balli (%)</label>
-            <input type="number" min="10" max="100" value="60" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white text-sm">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Holat</label>
+            <select name="status" class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-slate-900 text-sm">
+              {% with st=test.status|default:'draft' %}
+                <option value="draft" {% if st == 'draft' %}selected{% endif %}>Qoralama</option>
+                <option value="published" {% if st == 'published' %}selected{% endif %}>Faol</option>
+                <option value="closed" {% if st == 'closed' %}selected{% endif %}>Yopilgan</option>
+              {% endwith %}
+            </select>
+          </div>
+
+        </div>
+
+        <!-- TABLAR -->
+        <div class="border-t border-slate-100 pt-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-4">Savollar</h2>
+
+          <div class="flex gap-2 mb-4 border-b border-slate-200">
+            <button type="button" onclick="switchTab('manual')" id="tab-btn-manual"
+                    class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-blue-600 text-blue-600">
+              ✍️ Qo'lda
+            </button>
+            <button type="button" onclick="switchTab('text')" id="tab-btn-text"
+                    class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+              📋 Matndan
+            </button>
+            <button type="button" onclick="switchTab('file')" id="tab-btn-file"
+                    class="tab-btn px-4 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+              📁 Fayldan
+            </button>
+          </div>
+
+          <!-- TAB: QO'LDA -->
+          <div id="tab-manual" class="tab-content">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-sm text-slate-500">Savollar soni: <span id="question-count">0</span></span>
+              <button type="button" onclick="addQuestion()"
+                      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl">
+                + Savol Qo'shish
+              </button>
+            </div>
+            <div id="questions-container" class="space-y-4"></div>
+          </div>
+
+          <!-- TAB: MATNDAN -->
+          <div id="tab-text" class="tab-content hidden">
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800 space-y-1 mb-3">
+              <p class="font-semibold">Format:</p>
+              <pre class="whitespace-pre-wrap text-[11px]">1. Yagona javobli savol?
+*A) To'g'ri javob
+B) Noto'g'ri
+C) Noto'g'ri
+D) Noto'g'ri
+
+2. Bir nechta javobli savol?
+*A) To'g'ri 1
+*B) To'g'ri 2
+C) Noto'g'ri
+D) Noto'g'ri
+
+3. Javobsiz (so'rovnoma)?
+A) Variant 1
+B) Variant 2
+
+4. Ochiq savol?
+Qabul: javob1, javob2, javob3</pre>
+            </div>
+            <textarea id="text-input" rows="12"
+                      class="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white font-mono"
+                      placeholder="Matnni bu yerga joylashtiring..."></textarea>
+            <button type="button" onclick="parseTextQuestions()"
+                    class="mt-3 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl">
+              Matndan Savollarni Ajratish
+            </button>
+            <p id="text-status" class="mt-2 text-sm"></p>
+          </div>
+
+          <!-- TAB: FAYLDAN -->
+          <div id="tab-file" class="tab-content hidden">
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-800 mb-3 space-y-1">
+              <p class="font-semibold">Qo'llab-quvvatlanadigan formatlar:</p>
+              <p>• <b>.txt</b> — matn formati (yuqoridagi format)</p>
+              <p>• <b>.csv</b> — ustunlar: <code>savol, A, B, C, D, to'g'ri javob</code></p>
+              <p>• <b>.xlsx</b> — Excel (xuddi shu ustunlar)</p>
+              <p>• <b>.docx</b> — Word (matn formati)</p>
+            </div>
+            <input type="file" id="file-input" accept=".txt,.csv,.xlsx,.docx"
+                   class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+            <button type="button" onclick="uploadFile()"
+                    class="mt-3 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl">
+              Faylni Yuklash va Ajratish
+            </button>
+            <p id="file-status" class="mt-2 text-sm text-slate-500"></p>
           </div>
         </div>
 
-        <!-- SAVOLLAR RO'YXATI -->
-        <div class="space-y-4 pt-4">
-          <h2 class="text-lg font-bold text-slate-900">Savollar Bloki</h2>
-          
-          <div class="p-6 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-4">
-            <div class="flex justify-between items-center">
-              <h3 class="font-bold text-slate-800 text-sm">1-Savol</h3>
-              <span class="text-xs text-red-500 font-medium cursor-pointer hover:underline">O'chirish</span>
-            </div>
-            <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 focus:outline-none focus:border-blue-600 text-sm" placeholder="Savol matnini kiriting...">
-            
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-emerald-700 mb-1">A Variant (To'g'ri javob)</label>
-                <input type="text" class="w-full rounded-xl border border-emerald-300 bg-emerald-50/30 px-3 py-2 text-sm focus:outline-none focus:border-emerald-600" placeholder="To'g'ri javob">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">B Variant</label>
-                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">C Variant</label>
-                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">D Variant</label>
-                <input type="text" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-blue-600" placeholder="Noto'g'ri variant">
-              </div>
-            </div>
-          </div>
-        </div>
+        <input type="hidden" name="questions_json" id="questions_json">
 
-        <button type="button" class="w-full py-3 rounded-xl border-2 border-dashed border-blue-400 text-blue-600 font-semibold hover:bg-blue-50 transition text-sm">
-          + Yangi Savol Qo'shish
-        </button>
-
-        <div class="flex justify-end gap-4 pt-4 border-t border-slate-100">
-          <button type="submit" class="px-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md transition">
-            Testni Saqlash va Chop Etish
+        <div class="flex justify-end pt-4 border-t border-slate-100">
+          <button type="submit"
+                  class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm shadow-md">
+            {% if test %}O'zgarishlarni Saqlash{% else %}Testni Saqlash{% endif %}
           </button>
         </div>
       </form>
     </div>
   </main>
+
+  {{ questions_json|json_script:"questions-data" }}
+
+  <script>
+    // ============================================================
+    // KONSTANTALAR — ikkala URL ham aniq belgilangan
+    // ============================================================
+    const PARSE_FILE_URL = "{% url 'parse_file' %}";
+    const PARSE_TEXT_URL = "{% url 'parse_text' %}";
+    const CSRF = "{{ csrf_token }}";
+
+    // ============================================================
+    // JSON O'QISH
+    // ============================================================
+    let questions = [];
+    try {
+      const raw = document.getElementById('questions-data').textContent;
+      questions = JSON.parse(raw || '[]');
+      if (!Array.isArray(questions)) questions = [];
+    } catch (e) {
+      console.error('JSON parse error:', e);
+      questions = [];
+    }
+
+    // ============================================================
+    // TAB
+    // ============================================================
+    function switchTab(name) {
+      ['manual', 'text', 'file'].forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== name);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (t === name) {
+          btn.classList.add('border-blue-600', 'text-blue-600');
+          btn.classList.remove('border-transparent', 'text-slate-500');
+        } else {
+          btn.classList.remove('border-blue-600', 'text-blue-600');
+          btn.classList.add('border-transparent', 'text-slate-500');
+        }
+      });
+    }
+
+    // ============================================================
+    // MANUAL
+    // ============================================================
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+      }[c]));
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questions-container');
+      container.innerHTML = '';
+      questions.forEach((q, qi) => container.appendChild(buildQuestionBlock(q, qi)));
+      document.getElementById('question-count').textContent = questions.length;
+    }
+
+    function buildQuestionBlock(q, qi) {
+      const div = document.createElement('div');
+      div.className = 'p-5 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3';
+
+      let optionsHtml = '';
+      if (q.type === 'open') {
+        optionsHtml = `
+          <input type="text" value="${escapeHtml(q.correct_text_answers || '')}"
+                 oninput="questions[${qi}].correct_text_answers = this.value"
+                 placeholder="To'g'ri javob(lar), | bilan ajrating: 5|besh"
+                 class="w-full rounded-xl border border-emerald-300 bg-emerald-50/30 px-3 py-2 text-sm">
+        `;
+      } else {
+        const rows = (q.options || []).map((opt, oi) => `
+          <div class="flex gap-2 items-center">
+            <input type="${q.type === 'single' ? 'radio' : 'checkbox'}"
+                   ${opt.is_correct ? 'checked' : ''}
+                   onchange="toggleCorrect(${qi}, ${oi})">
+            <input type="text" value="${escapeHtml(opt.text)}"
+                   oninput="questions[${qi}].options[${oi}].text = this.value"
+                   placeholder="Variant matni"
+                   class="flex-1 rounded-xl border px-3 py-2 text-sm ${opt.is_correct ? 'border-emerald-400 bg-emerald-50/40' : 'border-slate-300 bg-white'}">
+            <button type="button" onclick="removeOption(${qi}, ${oi})" class="text-red-500 text-xs">✕</button>
+          </div>
+        `).join('');
+        optionsHtml = `
+          <div class="space-y-2">
+            ${rows}
+            <button type="button" onclick="addOption(${qi})" class="text-xs text-blue-600 font-semibold">+ Variant</button>
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-sm">${qi + 1}-Savol</h3>
+          <button type="button" onclick="removeQuestion(${qi})" class="text-xs text-red-500">O'chirish</button>
+        </div>
+        <input type="text" value="${escapeHtml(q.text)}"
+               oninput="questions[${qi}].text = this.value"
+               placeholder="Savol matni..."
+               class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <select onchange="changeType(${qi}, this.value)" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+            <option value="single" ${q.type === 'single' ? 'selected' : ''}>Yagona</option>
+            <option value="multiple" ${q.type === 'multiple' ? 'selected' : ''}>Bir nechta</option>
+            <option value="open" ${q.type === 'open' ? 'selected' : ''}>Ochiq</option>
+          </select>
+          <input type="number" step="0.5" min="0"
+       value="${(q.points !== undefined && q.points !== null) ? q.points : 1}"
+       oninput="questions[${qi}].points = (this.value === '' ? 1 : parseFloat(this.value))"
+       class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm" placeholder="Ball">
+        </div>
+        ${optionsHtml}
+      `;
+      return div;
+    }
+
+    function addQuestion() {
+      questions.push({
+        text: '', type: 'single', points: 1, correct_text_answers: '',
+        options: [
+          { text: '', is_correct: true },
+          { text: '', is_correct: false },
+          { text: '', is_correct: false },
+          { text: '', is_correct: false },
+        ],
+      });
+      renderQuestions();
+    }
+
+    function removeQuestion(qi) { questions.splice(qi, 1); renderQuestions(); }
+    function addOption(qi) { questions[qi].options.push({ text: '', is_correct: false }); renderQuestions(); }
+    function removeOption(qi, oi) { questions[qi].options.splice(oi, 1); renderQuestions(); }
+
+    function toggleCorrect(qi, oi) {
+      if (questions[qi].type === 'single') {
+        questions[qi].options.forEach((o, i) => o.is_correct = (i === oi));
+      } else {
+        questions[qi].options[oi].is_correct = !questions[qi].options[oi].is_correct;
+      }
+      renderQuestions();
+    }
+
+    function changeType(qi, t) {
+      questions[qi].type = t;
+      if (t === 'open') questions[qi].options = [];
+      else if (!questions[qi].options?.length) {
+        questions[qi].options = [
+          { text: '', is_correct: true }, { text: '', is_correct: false },
+          { text: '', is_correct: false }, { text: '', is_correct: false },
+        ];
+      }
+      renderQuestions();
+    }
+
+    // ============================================================
+    // TEXT PARSER — serverga yuborish (fayl bilan bir xil sifat)
+    // ============================================================
+    async function parseTextQuestions() {
+      const text = document.getElementById('text-input').value.trim();
+      if (!text) { alert("Matn bo'sh!"); return; }
+
+      const status = document.getElementById('text-status');
+      status.textContent = "Ajratilmoqda...";
+      status.className = 'mt-2 text-sm text-blue-600';
+
+      try {
+        const res = await fetch(PARSE_TEXT_URL, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': CSRF,
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'text=' + encodeURIComponent(text),
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          status.textContent = "❌ " + data.error;
+          status.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+
+        if (!data.questions || !data.questions.length) {
+          status.textContent = "❌ Savollar topilmadi. Formatni tekshiring.";
+          status.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+
+        if (!confirm(data.count + " ta savol topildi. Qo'shilsinmi?")) {
+          status.textContent = '';
+          return;
+        }
+
+        questions = questions.concat(data.questions);
+        renderQuestions();
+        switchTab('manual');
+        document.getElementById('text-input').value = '';
+        status.textContent = "✅ " + data.count + " ta savol qo'shildi. Endi saqlang.";
+        status.className = 'mt-2 text-sm text-emerald-600';
+      } catch (e) {
+        status.textContent = "❌ Xatolik: " + e.message;
+        status.className = 'mt-2 text-sm text-red-600';
+      }
+    }
+
+    // ============================================================
+    // FILE UPLOAD
+    // ============================================================
+    async function uploadFile() {
+      const fi = document.getElementById('file-input');
+      const status = document.getElementById('file-status');
+
+      if (!fi.files.length) { alert("Fayl tanlang!"); return; }
+
+      const file = fi.files[0];
+      status.textContent = "Yuklanmoqda...";
+      status.className = 'mt-2 text-sm text-blue-600';
+
+      const fd = new FormData();
+      fd.append('file', file);
+
+      try {
+        const res = await fetch(PARSE_FILE_URL, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': CSRF },
+          body: fd,
+        });
+        const data = await res.json();
+
+        if (data.error) {
+          status.textContent = "❌ " + data.error;
+          status.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+
+        if (!data.questions || !data.questions.length) {
+          status.textContent = "❌ Faylda savollar topilmadi";
+          status.className = 'mt-2 text-sm text-red-600';
+          return;
+        }
+
+        if (!confirm(data.count + " ta savol topildi. Qo'shilsinmi?")) return;
+
+        questions = questions.concat(data.questions);
+        renderQuestions();
+        switchTab('manual');
+        fi.value = '';
+        status.textContent = "✅ " + data.count + " ta savol qo'shildi. Endi saqlang.";
+        status.className = 'mt-2 text-sm text-emerald-600';
+      } catch (e) {
+        status.textContent = "❌ Xatolik: " + e.message;
+        status.className = 'mt-2 text-sm text-red-600';
+      }
+    }
+
+    // ============================================================
+    // FAN TANLASH
+    // ============================================================
+    function toggleNewSubject() {
+      const sel = document.getElementById('subject-select');
+      const inp = document.getElementById('new-subject-input');
+      if (!sel || !inp) return;
+
+      if (sel.value === '__new__') {
+        inp.classList.remove('hidden');
+        inp.required = true;
+        inp.focus();
+      } else {
+        inp.classList.add('hidden');
+        inp.required = false;
+      }
+    }
+
+    // ============================================================
+    // SUBMIT
+    // ============================================================
+    document.getElementById('test-form').addEventListener('submit', function (e) {
+      try {
+        document.getElementById('questions_json').value = JSON.stringify(questions);
+      } catch (err) {
+        console.error('JSON error:', err);
+        e.preventDefault();
+        alert('Savollarni saqlashda xatolik: ' + err.message);
+      }
+    });
+
+    // ============================================================
+    // BOSHLANISH
+    // ============================================================
+    renderQuestions();
+
+    document.addEventListener('DOMContentLoaded', function () {
+      const currentSubject = "{{ test.subject|default:''|escapejs }}";
+      if (currentSubject) {
+        const sel = document.getElementById('subject-select');
+        if (sel) {
+          let found = false;
+          for (const opt of sel.options) {
+            if (opt.value === currentSubject) { found = true; break; }
+          }
+          if (!found) {
+            sel.value = '__new__';
+            const inp = document.getElementById('new-subject-input');
+            inp.value = currentSubject;
+            inp.classList.remove('hidden');
+            inp.required = true;
+          }
+        }
+      }
+    });
+  </script>
 </body>
 </html>
