@@ -80,7 +80,7 @@ def signup_view(request):
                 return redirect('google_login')
             else:
                 # Google OAuth yo'q — to'g'ridan-to'g'ri parol bilan ro'yxatdan o'tish
-                                new_teacher = User.objects.create_user(
+                new_teacher = User.objects.create_user(
                     username=username,
                     email=email,
                     password=password,
@@ -128,8 +128,7 @@ def login_view(request):
     if request.method == 'POST':
         login_input = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
-
-                user_obj = User.objects.filter(username=login_input).first()
+        user_obj = User.objects.filter(username=login_input).first()
         if not user_obj:
             user_obj = User.objects.filter(email=login_input.lower()).first()
 
