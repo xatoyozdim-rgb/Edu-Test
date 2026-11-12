@@ -1,0 +1,20 @@
+{
+  "name": "EduTest Platform",
+  "short_name": "EduTest",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/static/assets/logo4-BS7ymqtK.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/assets/logo4-BS7ymqtK.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

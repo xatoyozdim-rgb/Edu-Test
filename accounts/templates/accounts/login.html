@@ -6,6 +6,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kirish | EduTest</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- PWA Sozlamalari -->
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="{% static 'assets/logo4-BS7ymqtK.png' %}">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register("{% static 'sw.js' %}")
+          .then(reg => console.log('PWA tayyor!'))
+          .catch(err => console.log('PWA xatosi:', err));
+      });
+    }
+  </script>
 </head>
 <body class="grid min-h-screen bg-slate-50 text-slate-900 lg:grid-cols-2">
   <aside class="hidden lg:flex flex-col justify-between p-10 relative overflow-hidden bg-gradient-to-br from-blue-600 via-sky-600 to-blue-800 text-white border-r">
